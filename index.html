@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lane Runner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 40%, #000000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Orbitron', 'Exo 2', monospace;
+            overflow: hidden;
+            position: relative;
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { 
+                background: radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 40%, #000000 100%);
+                transform: scale(1);
+            }
+            50% { 
+                background: radial-gradient(ellipse at 40% 60%, #1a1a1a 0%, #0d0d0d 40%, #000000 100%);
+                transform: scale(1.02);
+            }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 0, 0.8), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 0, 0.6), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 0, 0.9), transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 0, 0.4), transparent),
+                radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 0, 0.7), transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 3s infinite, slowStarMove 20s linear infinite, starShift 12s ease-in-out infinite, verticalDrift 8s ease-in-out infinite;
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 60px 50px, rgba(255, 255, 0, 0.3), transparent),
+                radial-gradient(1px 1px at 120px 90px, rgba(255, 255, 0, 0.5), transparent),
+                radial-gradient(2px 2px at 180px 120px, rgba(255, 255, 0, 0.2), transparent);
+            background-repeat: repeat;
+            background-size: 300px 150px;
+            animation: slowStarMove2 35s linear infinite, starShift2 15s ease-in-out infinite, verticalDrift2 10s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes verticalDrift {
+            0%, 100% { 
+                background-position-y: 0px;
+            }
+            25% { 
+                background-position-y: -15px;
+            }
+            50% { 
+                background-position-y: 10px;
+            }
+            75% { 
+                background-position-y: -8px;
+            }
+        }
+
+        @keyframes verticalDrift2 {
+            0%, 100% { 
+                background-position-y: 0px;
+            }
+            30% { 
+                background-position-y: 12px;
+            }
+            60% { 
+                background-position-y: -10px;
+            }
+            85% { 
+                background-position-y: 6px;
+            }
+        }
+
+        @keyframes starShift {
+            0%, 100% { 
+                transform: translateX(0) translateY(0) scale(1);
+            }
+            25% { 
+                transform: translateX(-8px) translateY(-12px) scale(1.01);
+            }
+            50% { 
+                transform: translateX(5px) translateY(8px) scale(0.99);
+            }
+            75% { 
+                transform: translateX(8px) translateY(-5px) scale(1.02);
+            }
+        }
+
+        @keyframes starShift2 {
+            0%, 100% { 
+                transform: translateX(0) translateY(0) scale(1);
+            }
+            20% { 
+                transform: translateX(6px) translateY(-10px) scale(1.02);
+            }
+            40% { 
+                transform: translateX(-4px) translateY(6px) scale(0.98);
+            }
+            60% { 
+                transform: translateX(-8px) translateY(-8px) scale(1.01);
+            }
+            80% { 
+                transform: translateX(10px) translateY(12px) scale(0.99);
+            }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes slowStarMove {
+            0% { 
+                background-position: 0 0;
+                transform: translateY(0);
+            }
+            33% { 
+                background-position: 0 33px;
+                transform: translateY(-4px);
+            }
+            66% { 
+                background-position: 0 66px;
+                transform: translateY(3px);
+            }
+            100% { 
+                background-position: 0 100px;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slowStarMove2 {
+            0% { 
+                background-position: 0 0;
+                transform: translateY(0);
+            }
+            25% { 
+                background-position: 0 37px;
+                transform: translateY(2px);
+            }
+            50% { 
+                background-position: 0 75px;
+                transform: translateY(-5px);
+            }
+            75% { 
+                background-position: 0 112px;
+                transform: translateY(3px);
+            }
+            100% { 
+                background-position: 0 150px;
+                transform: translateY(0);
+            }
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, 
+                rgba(0, 0, 0, 0.05) 0%, 
+                rgba(10, 10, 0, 0.02) 30%, 
+                rgba(0, 0, 0, 0.1) 100%);
+            position: relative;
+            border: none;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: none;
+            animation: containerFloat 12s ease-in-out infinite;
+        }
+
+        @keyframes containerFloat {
+            0%, 100% { 
+                transform: translateY(0) scale(1);
+            }
+            50% { 
+                transform: translateY(-3px) scale(1.001);
+            }
+        }
+
+        .road {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            background-image: 
+                radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 0, 0.9), transparent),
+                radial-gradient(2px 2px at 25% 40%, rgba(255, 255, 0, 0.7), transparent),
+                radial-gradient(1px 1px at 40% 10%, rgba(255, 255, 0, 0.8), transparent),
+                radial-gradient(3px 3px at 60% 30%, rgba(255, 255, 0, 0.6), transparent),
+                radial-gradient(1px 1px at 75% 60%, rgba(255, 255, 0, 0.9), transparent),
+                radial-gradient(2px 2px at 90% 80%, rgba(255, 255, 0, 0.5), transparent),
+                radial-gradient(1px 1px at 15% 70%, rgba(255, 255, 0, 0.7), transparent),
+                radial-gradient(2px 2px at 85% 15%, rgba(255, 255, 0, 0.8), transparent);
+            background-size: 100vw 100vh;
+            animation: starsMove 15s linear infinite;
+        }
+
+        @keyframes starsMove {
+            0% { 
+                background-position: 0 -100vh;
+                transform: scale(0.8) translateX(0) translateY(0);
+            }
+            25% { 
+                background-position: 0 -25vh;
+                transform: scale(0.95) translateX(-3px) translateY(-8px);
+            }
+            50% { 
+                background-position: 0 50vh;
+                transform: scale(1.1) translateX(3px) translateY(5px);
+            }
+            75% { 
+                background-position: 0 125vh;
+                transform: scale(1.15) translateX(-2px) translateY(-3px);
+            }
+            100% { 
+                background-position: 0 200vh;
+                transform: scale(1.2) translateX(0) translateY(0);
+            }
+        }
+
+        .lane-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            animation: none;
+        }
+
+        .car {
+            width: 60px;
+            height: 120px;
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 10;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.3));
+        }
+
+        .car-body {
+            width: 100%;
+            height: 80%;
+            background: linear-gradient(to bottom, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+            border-radius: 50% 50% 10px 10px;
+            position: relative;
+            border: 2px solid #ffff00;
+            box-shadow: 
+                0 0 20px rgba(255, 255, 0, 0.6),
+                inset 0 0 10px rgba(255, 255, 0, 0.2);
+        }
+
+        .car-windshield {
+            width: 70%;
+            height: 40%;
+            background: linear-gradient(to bottom, 
+                rgba(255, 255, 0, 0.8) 0%, 
+                rgba(255, 255, 0, 0.6) 50%, 
+                rgba(255, 255, 0, 0.4) 100%);
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50% 50% 20px 20px;
+            border: 1px solid #ffff00;
+            box-shadow: 
+                0 0 15px rgba(255, 255, 0, 0.6),
+                inset 0 0 10px rgba(255, 255, 0, 0.1);
+        }
+
+        .car-wheels {
+            position: absolute;
+            width: 100%;
+            height: 20%;
+            bottom: 0;
+        }
+
+        .wheel {
+            width: 12px;
+            height: 30px;
+            background: linear-gradient(to bottom, #ffff00 0%, #cccc00 50%, #ffff00 100%);
+            border: 1px solid #999900;
+            border-radius: 6px;
+            position: absolute;
+            bottom: 0;
+            box-shadow: 
+                0 0 10px rgba(255, 255, 0, 0.8),
+                inset 0 0 5px rgba(255, 255, 255, 0.3);
+            animation: thruster 0.1s infinite alternate;
+        }
+
+        @keyframes thruster {
+            0% { 
+                box-shadow: 
+                    0 0 10px rgba(255, 255, 0, 0.8),
+                    inset 0 0 5px rgba(255, 255, 255, 0.3);
+                height: 30px;
+                transform: scaleY(1);
+            }
+            100% { 
+                box-shadow: 
+                    0 0 15px rgba(255, 255, 0, 1),
+                    inset 0 0 8px rgba(255, 255, 255, 0.4);
+                height: 35px;
+                transform: scaleY(1.1);
+            }
+        }
+
+        @keyframes thrusterBoost {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 15px rgba(255, 255, 0, 1),
+                    inset 0 0 8px rgba(255, 255, 255, 0.4);
+                height: 35px;
+                transform: scaleY(1.1);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 25px rgba(255, 255, 0, 1),
+                    inset 0 0 12px rgba(255, 255, 255, 0.6);
+                height: 45px;
+                transform: scaleY(1.3);
+            }
+        }
+
+        .wheel.front-left { left: 8px; }
+        .wheel.front-right { right: 8px; }
+        .wheel.back-left { left: 20px; }
+        .wheel.back-right { right: 20px; }
+
+        .starship-wings {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .wing {
+            position: absolute;
+            width: 25px;
+            height: 40px;
+            background: linear-gradient(45deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid #ffff00;
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.4);
+        }
+
+        .wing.left {
+            left: -20px;
+            top: 30%;
+            border-radius: 15px 0 0 15px;
+            transform: skew(0deg, -10deg);
+        }
+
+        .wing.right {
+            right: -20px;
+            top: 30%;
+            border-radius: 0 15px 15px 0;
+            transform: skew(0deg, 10deg);
+        }
+
+        .starship-core {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #ffff00 0%, #cccc00 100%);
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 1);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(255, 255, 0, 1);
+                transform: translateX(-50%) scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 25px rgba(255, 255, 0, 1);
+                transform: translateX(-50%) scale(1.2);
+            }
+        }
+
+        .particle {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            border-radius: 45% 55% 60% 40% / 50% 65% 35% 50%;
+            background: radial-gradient(ellipse at 25% 25%, #8b7355 0%, #654321 30%, #3e2723 70%, #1c0e0a 100%);
+            border: 1px solid #4a2c17;
+            box-shadow: 
+                0 0 8px rgba(139, 115, 85, 0.4),
+                inset -8px -8px 15px rgba(0, 0, 0, 0.6),
+                inset 4px 4px 8px rgba(139, 115, 85, 0.3);
+            animation: asteroidRotate 3s linear infinite, asteroidFloat 2s ease-in-out infinite alternate;
+            position: relative;
+        }
+
+        .asteroid-type1 {
+            border-radius: 45% 55% 60% 40% / 50% 65% 35% 50%;
+            background: radial-gradient(ellipse at 25% 25%, #8b7355 0%, #654321 30%, #3e2723 70%, #1c0e0a 100%);
+            border: 1px solid #4a2c17;
+            box-shadow: 
+                0 0 8px rgba(139, 115, 85, 0.4),
+                inset -8px -8px 15px rgba(0, 0, 0, 0.6),
+                inset 4px 4px 8px rgba(139, 115, 85, 0.3);
+        }
+
+        .asteroid-type2 {
+            border-radius: 60% 40% 45% 55% / 35% 50% 65% 50%;
+            background: radial-gradient(ellipse at 30% 20%, #a8a8a8 0%, #707070 25%, #404040 60%, #1a1a1a 100%);
+            border: 1px solid #555;
+            box-shadow: 
+                0 0 12px rgba(168, 168, 168, 0.5),
+                inset -6px -6px 12px rgba(0, 0, 0, 0.7),
+                inset 3px 3px 6px rgba(200, 200, 200, 0.4);
+        }
+
+        .asteroid-type3 {
+            border-radius: 55% 45% 50% 50% / 60% 40% 55% 45%;
+            background: radial-gradient(ellipse at 35% 30%, #4a90e2 0%, #2c5aa0 35%, #1e3a5f 70%, #0d1929 100%);
+            border: 1px solid #2c5aa0;
+            box-shadow: 
+                0 0 15px rgba(74, 144, 226, 0.6),
+                inset -5px -5px 10px rgba(0, 0, 0, 0.5),
+                inset 2px 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .asteroid-type4 {
+            border-radius: 40% 60% 55% 45% / 50% 50% 40% 60%;
+            background: radial-gradient(ellipse at 20% 40%, #ff6b35 0%, #d84315 30%, #8b2e1f 65%, #2d1810 100%);
+            border: 1px solid #8b2e1f;
+            box-shadow: 
+                0 0 10px rgba(255, 107, 53, 0.7),
+                inset -7px -7px 14px rgba(0, 0, 0, 0.6),
+                inset 3px 3px 7px rgba(255, 107, 53, 0.4);
+        }
+
+        .asteroid-type5 {
+            border-radius: 50% 30% 60% 40% / 45% 55% 30% 70%;
+            background: radial-gradient(ellipse at 40% 25%, #e3f2fd 0%, #90caf9 25%, #42a5f5 60%, #1976d2 100%);
+            border: 1px solid #1976d2;
+            box-shadow: 
+                0 0 18px rgba(227, 242, 253, 0.8),
+                inset -4px -4px 8px rgba(25, 118, 210, 0.4),
+                inset 2px 2px 6px rgba(255, 255, 255, 0.6);
+        }
+
+        .particle::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #5d4037 0%, #3e2723 100%);
+            border-radius: 60% 40% 70% 30%;
+            top: 20%;
+            left: 15%;
+            box-shadow: 
+                12px 8px 0 -2px rgba(78, 52, 46, 0.8),
+                -4px 15px 0 -3px rgba(93, 64, 55, 0.6),
+                20px 20px 0 -4px rgba(62, 39, 35, 0.7);
+        }
+
+        .asteroid-type2::before {
+            background: radial-gradient(circle, #888 0%, #444 100%);
+            box-shadow: 
+                10px 6px 0 -2px rgba(136, 136, 136, 0.6),
+                -3px 12px 0 -3px rgba(102, 102, 102, 0.5),
+                18px 18px 0 -4px rgba(68, 68, 68, 0.7);
+        }
+
+        .asteroid-type3::before {
+            background: radial-gradient(circle, #6bb6ff 0%, #2c5aa0 100%);
+            box-shadow: 
+                8px 10px 0 -2px rgba(107, 182, 255, 0.7),
+                -5px 8px 0 -3px rgba(74, 144, 226, 0.6),
+                15px 15px 0 -4px rgba(44, 90, 160, 0.8);
+        }
+
+        .asteroid-type4::before {
+            background: radial-gradient(circle, #ff8a65 0%, #d84315 100%);
+            box-shadow: 
+                9px 7px 0 -2px rgba(255, 138, 101, 0.8),
+                -4px 14px 0 -3px rgba(255, 107, 53, 0.7),
+                16px 16px 0 -4px rgba(216, 67, 21, 0.8);
+        }
+
+        .asteroid-type5::before {
+            background: radial-gradient(circle, #ffffff 0%, #90caf9 100%);
+            box-shadow: 
+                6px 8px 0 -2px rgba(255, 255, 255, 0.9),
+                -3px 10px 0 -3px rgba(144, 202, 249, 0.8),
+                12px 12px 0 -4px rgba(66, 165, 245, 0.7);
+        }
+
+        .particle::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #4a2c17 0%, #2d1810 100%);
+            border-radius: 50% 30% 60% 40%;
+            top: 60%;
+            right: 20%;
+            box-shadow: 
+                -8px -5px 0 -1px rgba(45, 24, 16, 0.8),
+                6px -10px 0 -2px rgba(74, 44, 23, 0.6);
+        }
+
+        .asteroid-type2::after {
+            background: radial-gradient(circle, #666 0%, #333 100%);
+            box-shadow: 
+                -6px -4px 0 -1px rgba(102, 102, 102, 0.7),
+                5px -8px 0 -2px rgba(85, 85, 85, 0.6);
+        }
+
+        .asteroid-type3::after {
+            background: radial-gradient(circle, #5dade2 0%, #2c5aa0 100%);
+            box-shadow: 
+                -7px -6px 0 -1px rgba(93, 173, 226, 0.8),
+                4px -9px 0 -2px rgba(44, 90, 160, 0.7);
+        }
+
+        .asteroid-type4::after {
+            background: radial-gradient(circle, #ff7043 0%, #8b2e1f 100%);
+            box-shadow: 
+                -9px -4px 0 -1px rgba(255, 112, 67, 0.8),
+                7px -11px 0 -2px rgba(139, 46, 31, 0.7);
+        }
+
+        .asteroid-type5::after {
+            background: radial-gradient(circle, #e1f5fe 0%, #42a5f5 100%);
+            box-shadow: 
+                -5px -3px 0 -1px rgba(225, 245, 254, 0.9),
+                4px -7px 0 -2px rgba(66, 165, 245, 0.8);
+        }
+
+        @keyframes asteroidRotate {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.05); }
+            50% { transform: rotate(180deg) scale(0.95); }
+            75% { transform: rotate(270deg) scale(1.02); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        @keyframes asteroidFloat {
+            0% { 
+                box-shadow: 
+                    0 0 8px rgba(139, 115, 85, 0.4),
+                    inset -8px -8px 15px rgba(0, 0, 0, 0.6),
+                    inset 4px 4px 8px rgba(139, 115, 85, 0.3);
+            }
+            100% { 
+                box-shadow: 
+                    0 0 12px rgba(139, 115, 85, 0.6),
+                    inset -6px -6px 12px rgba(0, 0, 0, 0.8),
+                    inset 6px 6px 10px rgba(139, 115, 85, 0.4);
+            }
+        }
+
+        .score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,0.8), 
+                0 0 15px rgba(0,255,255,0.8),
+                0 0 25px rgba(0,255,255,0.6);
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
+
+        #score {
+            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .score-increase {
+            animation: scoreBoost 0.6s ease-out;
+        }
+
+        @keyframes scoreBoost {
+            0% {
+                transform: scale(1);
+                color: #00ffff;
+                text-shadow: 
+                    2px 2px 4px rgba(0,0,0,0.8), 
+                    0 0 15px rgba(0,255,255,0.8),
+                    0 0 25px rgba(0,255,255,0.6);
+            }
+            25% {
+                transform: scale(1.2);
+                color: #ffff00;
+                text-shadow: 
+                    2px 2px 4px rgba(0,0,0,0.8), 
+                    0 0 20px rgba(255,255,0,1),
+                    0 0 30px rgba(255,255,0,0.8),
+                    0 0 40px rgba(255,255,0,0.6);
+            }
+            100% {
+                transform: scale(1);
+                color: #00ffff;
+                text-shadow: 
+                    2px 2px 4px rgba(0,0,0,0.8), 
+                    0 0 15px rgba(0,255,255,0.8),
+                    0 0 25px rgba(0,255,255,0.6);
+            }
+        }
+
+        .lives {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #ffff00;
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,255,0,0.5);
+            z-index: 20;
+            letter-spacing: 2px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .heart {
+            width: 32px;
+            height: 32px;
+            position: relative;
+            font-size: 28px;
+            color: #ff6b6b;
+            text-shadow: 
+                0 0 10px rgba(255, 107, 107, 0.8),
+                0 0 20px rgba(255, 107, 107, 0.6),
+                0 0 30px rgba(255, 107, 107, 0.4);
+            animation: heartPulse 1.5s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .heart::before {
+            content: '♥';
+            display: block;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            line-height: 32px;
+        }
+
+        .heart.lost {
+            color: #444;
+            text-shadow: 
+                0 0 5px rgba(68, 68, 68, 0.3);
+            animation: none;
+            opacity: 0.3;
+        }
+
+        @keyframes heartPulse {
+            0%, 100% {
+                transform: scale(1);
+                text-shadow: 
+                    0 0 10px rgba(255, 107, 107, 0.8),
+                    0 0 20px rgba(255, 107, 107, 0.6),
+                    0 0 30px rgba(255, 107, 107, 0.4);
+            }
+            50% {
+                transform: scale(1.15);
+                text-shadow: 
+                    0 0 15px rgba(255, 107, 107, 1),
+                    0 0 25px rgba(255, 107, 107, 0.8),
+                    0 0 35px rgba(255, 107, 107, 0.6);
+            }
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: #ffff00;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,0,0.3);
+            border: 2px solid #ffff00;
+            z-index: 30;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .game-over h2 {
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .game-over p {
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: #ffff00;
+            color: #000000;
+            border: 2px solid #cccc00;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255,255,0,0.5);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .restart-btn:hover {
+            background: #cccc00;
+            box-shadow: 0 0 15px rgba(255,255,0,0.8);
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffff00;
+            font-size: 16px;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 300;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 8px rgba(255,255,0,0.4);
+            z-index: 20;
+            letter-spacing: 1px;
+        }
+
+        .lane {
+            position: absolute;
+            width: 150px;
+            height: 100%;
+            border-right: 1px dashed rgba(0, 255, 255, 0.2);
+        }
+
+        .lane:nth-child(1) { left: 0; }
+        .lane:nth-child(2) { left: 150px; }
+        .lane:nth-child(3) { left: 300px; }
+        .lane:nth-child(4) { left: 450px; border-right: none; }
+
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="road"></div>
+        <div class="lane-lines"></div>
+        
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="lives" id="livesContainer">
+            <div class="heart" id="heart1"></div>
+            <div class="heart" id="heart2"></div>
+            <div class="heart" id="heart3"></div>
+        </div>
+        
+        <div class="car" id="car">
+            <div class="starship-wings">
+                <div class="wing left"></div>
+                <div class="wing right"></div>
+            </div>
+            <div class="car-body">
+                <div class="starship-core"></div>
+                <div class="car-windshield"></div>
+            </div>
+            <div class="car-wheels">
+                <div class="wheel front-left"></div>
+                <div class="wheel front-right"></div>
+                <div class="wheel back-left"></div>
+                <div class="wheel back-right"></div>
+            </div>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button class="restart-btn" onclick="restartGame()">Drive Again</button>
+        </div>
+        
+        <div class="instructions">
+            Use ← → arrow keys or A/D to change lanes • Avoid the particles!
+        </div>
+    </div>
+
+    <script>
+        const gameContainer = document.querySelector('.game-container');
+        const car = document.getElementById('car');
+        const scoreElement = document.getElementById('score');
+        const livesContainer = document.getElementById('livesContainer');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+
+        let gameState = {
+            currentLane: 1,
+            targetLane: 1,
+            currentPosition: 0,
+            targetPosition: 0,
+            velocity: 0,
+            score: 0,
+            lives: 3,
+            particles: [],
+            gameRunning: true,
+            particleSpeed: 6,
+            spawnRate: 0.015,
+            gameSpeed: 1,
+            isTransitioning: false,
+            lastTurnTime: 0,
+            lastScoreTime: Date.now()
+        };
+
+        const lanePositions = [window.innerWidth * 0.2, window.innerWidth * 0.4, window.innerWidth * 0.6, window.innerWidth * 0.8];
+        let keys = {};
+        let inputCooldown = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (!keys[e.key]) {
+                keys[e.key] = true;
+                handleInput(e.key);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function handleInput(key) {
+            if (!gameState.gameRunning || inputCooldown) return;
+
+            const currentTime = Date.now();
+            if (currentTime - gameState.lastTurnTime < 200) return;
+
+            if ((key === 'ArrowLeft' || key === 'a' || key === 'A') && gameState.targetLane > 0) {
+                gameState.targetLane--;
+                initiateTurn();
+                gameState.lastTurnTime = currentTime;
+            }
+            if ((key === 'ArrowRight' || key === 'd' || key === 'D') && gameState.targetLane < 3) {
+                gameState.targetLane++;
+                initiateTurn();
+                gameState.lastTurnTime = currentTime;
+            }
+        }
+
+        function initiateTurn() {
+            gameState.isTransitioning = true;
+            gameState.targetPosition = lanePositions[gameState.targetLane];
+
+            const thrusters = document.querySelectorAll('.wheel');
+            thrusters.forEach(thruster => {
+                thruster.style.animation = 'thrusterBoost 0.3s ease-out';
+            });
+
+            setTimeout(() => {
+                thrusters.forEach(thruster => {
+                    thruster.style.animation = 'thruster 0.1s infinite alternate';
+                });
+            }, 300);
+            
+            inputCooldown = true;
+            setTimeout(() => {
+                inputCooldown = false;
+            }, 400);
+        }
+
+        function updateScore() {
+            const currentTime = Date.now();
+            if (currentTime - gameState.lastScoreTime >= 1000) {
+                const targetScore = gameState.score + 3;
+                animateScoreCount(gameState.score, targetScore);
+                gameState.score = targetScore;
+                gameState.lastScoreTime = currentTime;
+                
+                if (gameState.score % 30 === 0 && gameState.score > 0) {
+                    changeThemeColor();
+                    gameState.particleSpeed += 0.2;
+                    gameState.spawnRate += 0.003;
+                    gameState.gameSpeed += 0.2;
+                    
+                    const road = document.querySelector('.road');
+                    road.style.animationDuration = (15 / gameState.gameSpeed) + 's';
+                }
+            }
+        }
+
+        function animateScoreCount(fromScore, toScore) {
+            const duration = 600;
+            const steps = toScore - fromScore;
+            const stepDuration = duration / steps;
+            
+            let currentScore = fromScore;
+            
+            const countUp = () => {
+                if (currentScore < toScore) {
+                    currentScore++;
+                    scoreElement.textContent = currentScore;
+                    
+                    setTimeout(countUp, stepDuration);
+                } else {
+                    scoreElement.classList.remove('score-increase');
+                    void scoreElement.offsetWidth;
+                    scoreElement.classList.add('score-increase');
+                }
+            };
+            
+            countUp();
+        }
+
+        function generateRandomColor() {
+            const colors = [
+                '#ff6b6b',
+                '#4ecdc4',
+                '#45b7d1',
+                '#96ceb4',
+                '#ffeaa7',
+                '#dda0dd',
+                '#98d8c8',
+                '#f7dc6f',
+                '#bb8fce',
+                '#85c1e9',
+                '#f8c471',
+                '#82e0aa',
+                '#f1948a',
+                '#85c1e9'
+            ];
+            
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function changeThemeColor() {
+            const newColor = generateRandomColor();
+            console.log('Changing theme color to:', newColor);
+            
+            scoreElement.style.setProperty('color', newColor, 'important');
+            scoreElement.style.setProperty('text-shadow', `
+                2px 2px 4px rgba(0,0,0,0.8), 
+                0 0 15px ${newColor},
+                0 0 25px ${newColor}
+            `, 'important');
+            
+            const livesElement = document.querySelector('.lives');
+            const gameOverText = document.querySelector('.game-over');
+            const instructions = document.querySelector('.instructions');
+            
+            if (instructions) {
+                instructions.style.setProperty('color', newColor, 'important');
+                instructions.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 10px ${newColor}`, 'important');
+            }
+            
+            if (gameOverText) {
+                const gameOverHeading = gameOverText.querySelector('h2');
+                const gameOverParagraph = gameOverText.querySelector('p');
+                const restartButton = gameOverText.querySelector('button');
+                
+                if (gameOverHeading) {
+                    gameOverHeading.style.setProperty('color', newColor, 'important');
+                    gameOverHeading.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}`, 'important');
+                }
+                if (gameOverParagraph) {
+                    gameOverParagraph.style.setProperty('color', newColor, 'important');
+                }
+                if (restartButton) {
+                    restartButton.style.setProperty('background', `linear-gradient(45deg, ${newColor}, #333)`, 'important');
+                    restartButton.style.setProperty('border', `2px solid ${newColor}`, 'important');
+                }
+            }
+            
+            const hearts = document.querySelectorAll('.heart:not(.lost)');
+            hearts.forEach(heart => {
+                heart.style.setProperty('text-shadow', `
+                    0 0 10px ${newColor},
+                    0 0 20px ${newColor},
+                    0 0 30px rgba(255, 107, 107, 0.4)
+                `, 'important');
+            });
+            
+            const starshipCore = document.querySelector('.starship-core');
+            const leftWing = document.querySelector('.left-wing');
+            const rightWing = document.querySelector('.right-wing');
+            const leftThruster = document.querySelector('.left-thruster');
+            const rightThruster = document.querySelector('.right-thruster');
+            
+            if (starshipCore) {
+                starshipCore.style.setProperty('background', `radial-gradient(circle, ${newColor} 0%, #333 100%)`, 'important');
+                starshipCore.style.setProperty('box-shadow', `
+                    0 0 20px ${newColor},
+                    inset -3px -3px 6px rgba(0, 0, 0, 0.6),
+                    inset 3px 3px 6px rgba(255, 255, 255, 0.2)
+                `, 'important');
+            }
+            
+            if (leftWing && rightWing) {
+                const wingColor = `linear-gradient(45deg, ${newColor} 0%, #666 50%, #333 100%)`;
+                const wingGlow = `0 0 15px ${newColor}, inset -2px -2px 4px rgba(0, 0, 0, 0.5)`;
+                
+                leftWing.style.setProperty('background', wingColor, 'important');
+                leftWing.style.setProperty('box-shadow', wingGlow, 'important');
+                rightWing.style.setProperty('background', wingColor, 'important');
+                rightWing.style.setProperty('box-shadow', wingGlow, 'important');
+            }
+            
+            if (leftThruster && rightThruster) {
+                const thrusterColor = `radial-gradient(circle, ${newColor} 0%, #ff4444 100%)`;
+                leftThruster.style.setProperty('background', thrusterColor, 'important');
+                rightThruster.style.setProperty('background', thrusterColor, 'important');
+            }
+            
+            scoreElement.style.transform = 'scale(1.5)';
+            scoreElement.style.transition = 'all 0.5s ease';
+            
+            setTimeout(() => {
+                scoreElement.style.transform = 'scale(1)';
+            }, 500);
+            
+            const existingStyle = document.getElementById('dynamic-score-style');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            
+            const style = document.createElement('style');
+            style.id = 'dynamic-score-style';
+            style.textContent = `
+                body::before {
+                    background-image: 
+                        radial-gradient(1px 1px at 20px 30px, ${newColor}, transparent),
+                        radial-gradient(2px 2px at 40px 70px, ${newColor}, transparent),
+                        radial-gradient(1px 1px at 90px 40px, ${newColor}, transparent),
+                        radial-gradient(1px 1px at 130px 80px, ${newColor}, transparent),
+                        radial-gradient(2px 2px at 160px 30px, ${newColor}, transparent) !important;
+                }
+                
+                body::after {
+                    background-image: 
+                        radial-gradient(1px 1px at 60px 50px, ${newColor}, transparent),
+                        radial-gradient(1px 1px at 100px 90px, ${newColor}, transparent),
+                        radial-gradient(2px 2px at 140px 20px, ${newColor}, transparent),
+                        radial-gradient(1px 1px at 180px 60px, ${newColor}, transparent),
+                        radial-gradient(2px 2px at 80px 120px, ${newColor}, transparent) !important;
+                }
+                
+                .score-increase {
+                    animation: scoreBoost 0.6s ease-out !important;
+                }
+                
+                @keyframes scoreBoost {
+                    0% {
+                        transform: scale(1) !important;
+                        color: ${newColor} !important;
+                        text-shadow: 
+                            2px 2px 4px rgba(0,0,0,0.8), 
+                            0 0 15px ${newColor},
+                            0 0 25px ${newColor} !important;
+                    }
+                    25% {
+                        transform: scale(1.2) !important;
+                        color: #ffff00 !important;
+                        text-shadow: 
+                            2px 2px 4px rgba(0,0,0,0.8), 
+                            0 0 20px rgba(255,255,0,1),
+                            0 0 30px rgba(255,255,0,0.8) !important;
+                    }
+                    100% {
+                        transform: scale(1) !important;
+                        color: ${newColor} !important;
+                        text-shadow: 
+                            2px 2px 4px rgba(0,0,0,0.8), 
+                            0 0 15px ${newColor},
+                            0 0 25px ${newColor} !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function updateHearts() {
+            const hearts = ['heart1', 'heart2', 'heart3'];
+            hearts.forEach((heartId, index) => {
+                const heart = document.getElementById(heartId);
+                if (index >= gameState.lives) {
+                    heart.classList.add('lost');
+                } else {
+                    heart.classList.remove('lost');
+                }
+            });
+        }
+
+        function updateCarPosition() {
+            if (!gameState.isTransitioning) {
+                gameState.currentPosition = lanePositions[gameState.currentLane];
+                car.style.left = gameState.currentPosition - 30 + 'px';
+                return;
+            }
+            const distance = gameState.targetPosition - gameState.currentPosition;
+            const acceleration = distance * 0.15;
+            gameState.velocity = (gameState.velocity + acceleration) * 0.85;
+            gameState.currentPosition += gameState.velocity;
+
+            if (Math.abs(distance) < 2 && Math.abs(gameState.velocity) < 0.5) {
+                gameState.currentPosition = gameState.targetPosition;
+                gameState.currentLane = gameState.targetLane;
+                gameState.velocity = 0;
+                gameState.isTransitioning = false;
+
+                car.style.transform = 'rotate(0deg)';
+                car.style.filter = 'drop-shadow(0 0 15px rgba(255, 255, 0, 0.3))';
+            } else {
+                const maxRotation = 8;
+                const rotation = Math.max(-maxRotation, Math.min(maxRotation, gameState.velocity * 0.8));
+
+                const glowIntensity = Math.abs(gameState.velocity) * 0.1 + 0.3;
+                car.style.transform = `rotate(${rotation}deg)`;
+                car.style.filter = `drop-shadow(0 0 ${15 + Math.abs(rotation) * 2}px rgba(255, 255, 0, ${glowIntensity}))`;
+            }
+
+            car.style.left = gameState.currentPosition - 30 + 'px';
+        }
+
+        function spawnParticle() {
+            if (Math.random() < gameState.spawnRate) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const lane = Math.floor(Math.random() * 4);
+                const laneCenter = lanePositions[lane];
+                
+                const sizeVariation = 0.7 + Math.random() * 0.8;
+                const rotationSpeed = 2 + Math.random() * 4;
+                
+                const asteroidType = Math.floor(Math.random() * 5) + 1;
+                particle.classList.add(`asteroid-type${asteroidType}`);
+                
+                let typeModifier = 1;
+                switch(asteroidType) {
+                    case 1:
+                        typeModifier = 1;
+                        break;
+                    case 2:
+                        typeModifier = 1.1;
+                        break;
+                    case 3:
+                        typeModifier = 0.9;
+                        break;
+                    case 4:
+                        typeModifier = 0.8;
+                        break;
+                    case 5:
+                        typeModifier = 1.2;
+                        break;
+                }
+                
+                const finalSize = sizeVariation * typeModifier;
+                
+                particle.style.left = (laneCenter - 20) + 'px';
+                particle.style.top = '200px';
+                particle.style.transform = `scale(${finalSize})`;
+                particle.style.animationDuration = `${rotationSpeed}s, 2s`;
+                
+                const shapeVariations = [
+                    '45% 55% 60% 40% / 50% 65% 35% 50%',
+                    '60% 40% 45% 55% / 35% 50% 65% 50%',
+                    '55% 45% 50% 50% / 60% 40% 55% 45%',
+                    '40% 60% 55% 45% / 50% 50% 40% 60%',
+                    '50% 30% 60% 40% / 45% 55% 30% 70%'
+                ];
+                
+                if (Math.random() < 0.3) {
+                    const randomShape = shapeVariations[Math.floor(Math.random() * shapeVariations.length)];
+                    particle.style.borderRadius = randomShape;
+                }
+                
+                gameContainer.appendChild(particle);
+                
+                gameState.particles.push({
+                    element: particle,
+                    lane: lane,
+                    y: 200,
+                    size: finalSize,
+                    type: asteroidType
+                });
+            }
+        }
+
+        function updateParticles() {
+            gameState.particles = gameState.particles.filter(particle => {
+                particle.y += gameState.particleSpeed;
+                particle.element.style.top = particle.y + 'px';
+
+                const carCenterX = gameState.currentPosition;
+                const particleCenterX = lanePositions[particle.lane];
+                const horizontalDistance = Math.abs(carCenterX - particleCenterX);
+                
+                if (horizontalDistance < 40 && 
+                    particle.y > window.innerHeight - 280 && particle.y < window.innerHeight - 120) {
+                    
+                    particle.element.remove();
+                    gameState.lives--;
+                    updateHearts();
+                    
+                    car.style.filter = 'brightness(50%) sepia(100%) hue-rotate(0deg)';
+                    setTimeout(() => {
+                        car.style.filter = 'drop-shadow(0 0 15px rgba(255, 255, 0, 0.3))';
+                    }, 300);
+
+                    if (gameState.lives <= 0) {
+                        endGame();
+                    }
+                    return false;
+                }
+
+                if (particle.y > window.innerHeight) {
+                    particle.element.remove();
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        function endGame() {
+            gameState.gameRunning = false;
+            finalScoreElement.textContent = gameState.score;
+            gameOverElement.style.display = 'block';
+        }
+
+        function restartGame() {
+            gameState = {
+                currentLane: 1,
+                targetLane: 1,
+                currentPosition: 0,
+                targetPosition: 0,
+                velocity: 0,
+                score: 0,
+                lives: 3,
+                particles: [],
+                gameRunning: true,
+                particleSpeed: 6,
+                spawnRate: 0.015,
+                gameSpeed: 1,
+                isTransitioning: false,
+                lastTurnTime: 0,
+                lastScoreTime: Date.now()
+            };
+
+            document.querySelectorAll('.particle').forEach(particle => particle.remove());
+
+            scoreElement.textContent = '0';
+            updateHearts();
+            livesElement.textContent = '3';
+            gameOverElement.style.display = 'none';
+
+            updateCarPosition();
+            car.style.filter = 'drop-shadow(0 0 15px rgba(255, 255, 0, 0.3))';
+
+            const road = document.querySelector('.road');
+            road.style.animationDuration = '15s';
+
+            inputCooldown = false;
+        }        function gameLoop() {
+            if (gameState.gameRunning) {
+                updateCarPosition();
+                updateScore();
+                spawnParticle();
+                updateParticles();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        updateCarPosition();
+        updateHearts();
+        
+        gameLoop();
+    </script>
+</body>
+</html>
