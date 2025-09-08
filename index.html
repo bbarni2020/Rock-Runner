@@ -621,6 +621,22 @@
             transition: all 0.3s ease;
         }
 
+        .best-score {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            color: #ffff00;
+            font-size: 24px;
+            font-weight: 600;
+            font-family: 'Orbitron', monospace;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,0.8), 
+                0 0 15px rgba(255,255,0,0.8),
+                0 0 25px rgba(255,255,0,0.6);
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
+
         #score {
             display: inline-block;
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -897,7 +913,7 @@
         .pause-btn-mobile {
             position: absolute;
             top: 20px;
-            right: 140px;
+            right: -100px;
             z-index: 26;
         }
         
@@ -957,6 +973,12 @@
             .score {
                 font-size: 24px;
                 top: 15px;
+                left: 15px;
+            }
+            
+            .best-score {
+                font-size: 18px;
+                top: 50px;
                 left: 15px;
             }
             
@@ -1029,6 +1051,12 @@
                 font-size: 20px;
             }
             
+            .best-score {
+                font-size: 16px;
+                top: 45px;
+                left: 15px;
+            }
+            
             .lives {
                 font-size: 18px;
             }
@@ -1064,7 +1092,7 @@
                 height: 60px;
                 font-size: 24px;
                 top: 15px;
-                right: 120px;
+                right: -80px;
             }
             
             .game-over h2 {
@@ -1283,6 +1311,7 @@
         <div class="lane-lines"></div>
         
         <div class="score">Score: <span id="score">0</span></div>
+        <div class="best-score">Best: <span id="bestScoreDisplay">0</span></div>
         <div class="lives" id="livesContainer">
             <div class="heart" id="heart1"></div>
             <div class="heart" id="heart2"></div>
@@ -1309,6 +1338,8 @@
         <div class="game-over" id="gameOver">
             <h2>Game Over!</h2>
             <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Best Score: <span id="bestScore">0</span></p>
+            <p id="newRecordMessage" style="display: none; color: #00ff00; font-weight: bold; font-size: 20px; margin: 10px 0;">🏆 NEW RECORD! 🏆</p>
             <button class="restart-btn" onclick="restartGame()">Drive Again</button>
         </div>
         
@@ -1344,11 +1375,28 @@
     const gameContainer = document.querySelector('.game-container');
     const car = document.getElementById('car');
     const scoreElement = document.getElementById('score');
+    const bestScoreDisplayElement = document.getElementById('bestScoreDisplay');
     const livesContainer = document.getElementById('livesContainer');
     const gameOverElement = document.getElementById('gameOver');
     const pauseMenuElement = document.getElementById('pauseMenu');
     const finalScoreElement = document.getElementById('finalScore');
+    const bestScoreElement = document.getElementById('bestScore');
+    const newRecordMessageElement = document.getElementById('newRecordMessage');
     const road = document.querySelector('.road');
+
+    function loadBestScore() {
+        const saved = localStorage.getItem('rockRunnerBestScore');
+        return saved ? parseInt(saved) : 0;
+    }
+
+    function saveBestScore(score) {
+        localStorage.setItem('rockRunnerBestScore', score.toString());
+    }
+
+    let bestScore = loadBestScore();
+    if (bestScoreDisplayElement) {
+        bestScoreDisplayElement.textContent = bestScore;
+    }
 
         let gameState = {
             currentLane: 1,
@@ -1678,6 +1726,19 @@
             scoreElement.style.setProperty('color', newColor, 'important');
             scoreElement.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor}`, 'important');
             
+            if (bestScoreDisplayElement) {
+                bestScoreDisplayElement.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                bestScoreDisplayElement.style.setProperty('color', newColor, 'important');
+                bestScoreDisplayElement.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor}`, 'important');
+            }
+            
+            const bestScoreContainer = document.querySelector('.best-score');
+            if (bestScoreContainer) {
+                bestScoreContainer.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                bestScoreContainer.style.setProperty('color', newColor, 'important');
+                bestScoreContainer.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor}`, 'important');
+            }
+            
             const livesElement = document.querySelector('.lives');
             const gameOverText = document.querySelector('.game-over');
             const instructions = document.querySelector('.instructions');
@@ -1870,6 +1931,10 @@
                         color: ${newColor} !important;
                         text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor} !important;
                     }
+                }
+                
+                #newRecordMessage {
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 20px #00ff00, 0 0 30px #00ff00 !important;
                 }
             `;
             document.head.appendChild(style);
@@ -2198,7 +2263,34 @@
 
         function endGame() {
             gameState.gameRunning = false;
+            
+            let isNewRecord = false;
+            if (gameState.score > bestScore) {
+                isNewRecord = true;
+                bestScore = gameState.score;
+                saveBestScore(bestScore);
+                if (bestScoreDisplayElement) {
+                    bestScoreDisplayElement.textContent = bestScore;
+                }
+            }
+            
             finalScoreElement.textContent = gameState.score;
+            if (bestScoreElement) {
+                bestScoreElement.textContent = bestScore;
+            }
+            
+            if (isNewRecord && newRecordMessageElement) {
+                newRecordMessageElement.style.display = 'block';
+                newRecordMessageElement.style.animation = 'scoreBoost 1s ease-out infinite';
+                setTimeout(() => {
+                    if (newRecordMessageElement) {
+                        newRecordMessageElement.style.animation = '';
+                    }
+                }, 3000);
+            } else if (newRecordMessageElement) {
+                newRecordMessageElement.style.display = 'none';
+            }
+            
             gameOverElement.style.display = 'block';
             
             const road = document.querySelector('.road');
@@ -2340,6 +2432,9 @@
             gameState.trailParticles = [];
 
             scoreElement.textContent = '0';
+            if (bestScoreDisplayElement) {
+                bestScoreDisplayElement.textContent = bestScore;
+            }
             updateHearts();
             gameOverElement.style.display = 'none';
             pauseMenuElement.style.display = 'none';
