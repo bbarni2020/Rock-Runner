@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lane Runner</title>
+    <title>Rock Runner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
@@ -1010,6 +1010,133 @@
             }
         }
 
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            z-index: 50;
+            font-family: 'Orbitron', monospace;
+        }
+
+        @media (min-width: 769px) {
+            .ai-assistant {
+                display: block;
+            }
+        }
+
+        .captain-figure {
+            font-size: 50px;
+            text-align: center;
+            animation: captainFloat 3s ease-in-out infinite, captainGlow 2s ease-in-out infinite alternate;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .captain-figure:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes captainFloat {
+            0%, 100% { 
+                transform: translateY(0);
+            }
+            50% { 
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes captainGlow {
+            0% {
+                filter: drop-shadow(0 0 5px rgba(255, 255, 0, 0.3));
+            }
+            100% {
+                filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.8));
+            }
+        }
+
+        .speech-bubble {
+            background: rgba(0,0,0,0.9);
+            color: #ffff00;
+            padding: 12px;
+            border-radius: 15px;
+            position: relative;
+            margin-top: 10px;
+            max-width: 220px;
+            font-size: 13px;
+            line-height: 1.3;
+            opacity: 0;
+            transform: scale(0.8) translateY(10px) rotate(-2deg);
+            transition: opacity 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 0 20px rgba(255,255,0,0.5), inset 0 0 10px rgba(255,255,0,0.1);
+            border: 1px solid rgba(255,255,0,0.3);
+            animation: bubblePulse 2s ease-in-out infinite;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            right: 30px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 15px solid rgba(0,0,0,0.9);
+            animation: arrowBounce 1.5s ease-in-out infinite;
+        }
+
+        .speech-bubble.show {
+            opacity: 1;
+            transform: scale(1) translateY(0) rotate(0deg);
+            animation: bubbleShow 0.8s ease-out, bubbleWiggle 2s ease-in-out infinite 1s;
+        }
+
+        @keyframes bubblePulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255,255,0,0.5), inset 0 0 10px rgba(255,255,0,0.1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255,255,0,0.7), inset 0 0 15px rgba(255,255,0,0.2);
+            }
+        }
+
+        @keyframes bubbleShow {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) translateY(20px) rotate(10deg);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1) translateY(-5px) rotate(-2deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0) rotate(0deg);
+            }
+        }
+
+        @keyframes bubbleWiggle {
+            0%, 100% {
+                transform: scale(1) translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: scale(1.02) translateY(-1px) rotate(1deg);
+            }
+            75% {
+                transform: scale(0.98) translateY(1px) rotate(-1deg);
+            }
+        }
+
+        @keyframes arrowBounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-2px);
+            }
+        }
+
         body {
             transition: background 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
@@ -1061,6 +1188,13 @@
             <h2>Game Over!</h2>
             <p>Final Score: <span id="finalScore">0</span></p>
             <button class="restart-btn" onclick="restartGame()">Drive Again</button>
+        </div>
+        
+        <div class="ai-assistant" id="aiAssistant">
+            <div class="captain-figure">🧑‍🚀</div>
+            <div class="speech-bubble" id="speechBubble">
+                <p id="aiMessage">Welcome, Captain!</p>
+            </div>
         </div>
         
         <div class="instructions">
@@ -1874,6 +2008,23 @@
             gameState.gameRunning = false;
             finalScoreElement.textContent = gameState.score;
             gameOverElement.style.display = 'block';
+            
+            const road = document.querySelector('.road');
+            if (road) {
+                road.style.animationPlayState = 'paused';
+            }
+            
+            document.body.style.animationPlayState = 'paused';
+            
+            if (aiInterval) {
+                clearInterval(aiInterval);
+                aiInterval = null;
+            }
+            
+            const speechBubble = document.getElementById('speechBubble');
+            if (speechBubble) {
+                speechBubble.classList.remove('show');
+            }
         }
 
     function restartGame() {
@@ -1945,7 +2096,13 @@
 
             road.style.animationDuration = '15s';
             
+            road.style.animationPlayState = 'running';
+            
+            document.body.style.animationPlayState = 'running';
+            
             applySpawnSettings();
+            
+            startAIAssistant();
         }        function gameLoop() {
             if (gameState.gameRunning) {
                 try {
@@ -2038,6 +2195,127 @@
         }
 
         applySpawnSettings();
+        
+        const aiAssistant = document.getElementById('aiAssistant');
+        const speechBubble = document.getElementById('speechBubble');
+        const aiMessage = document.getElementById('aiMessage');
+        let aiInterval;
+
+        async function getAIMessage() {
+            try {
+                const currentScore = gameState.score;
+                const currentLives = gameState.lives;
+                const gameRunning = gameState.gameRunning;
+                
+                let contextualPrompts = [];
+                
+                if (!gameRunning) {
+                    contextualPrompts = [
+                        `Player just finished with score ${currentScore}. Give a short congratulatory message.`,
+                        `Game over with ${currentScore} points. Quick encouragement to try again.`,
+                        `Final score: ${currentScore}. Share a fun fact about high scores.`
+                    ];
+                } else if (currentLives === 1) {
+                    contextualPrompts = [
+                        `Player has ${currentLives} life left and ${currentScore} points. Give urgent survival tip.`,
+                        `Critical moment! ${currentLives} life remaining, score: ${currentScore}. Quick advice.`,
+                        `Almost out! ${currentLives} life, ${currentScore} points. Emergency tip.`
+                    ];
+                } else if (currentScore === 0) {
+                    contextualPrompts = [
+                        `New player with ${currentLives} lives. Give a beginner tip.`,
+                        `Just starting out with ${currentLives} lives. Quick getting started advice.`,
+                        `Fresh game! ${currentLives} lives available. Basic tip.`
+                    ];
+                } else if (currentScore > 100) {
+                    contextualPrompts = [
+                        `Experienced player with ${currentScore} points and ${currentLives} lives. Advanced tip.`,
+                        `Score: ${currentScore}, lives: ${currentLives}. Share a pro strategy.`,
+                        `${currentScore} points! ${currentLives} lives. Expert advice.`
+                    ];
+                } else {
+                    contextualPrompts = [
+                        `Score: ${currentScore}, lives: ${currentLives}. Give a helpful tip.`,
+                        `Current stats: ${currentScore} points, ${currentLives} lives. Quick advice.`,
+                        `${currentScore} points so far with ${currentLives} lives. Useful tip.`
+                    ];
+                }
+                
+                const generalPrompts = [
+                    `Player has ${currentScore} points. Quick space fact.`,
+                    `Score: ${currentScore}, lives: ${currentLives}. Tiny space joke.`,
+                    `With ${currentScore} points and ${currentLives} lives. Short encouragement.`
+                ];
+                
+                const allPrompts = [...contextualPrompts, ...generalPrompts];
+                const randomPrompt = allPrompts[Math.floor(Math.random() * allPrompts.length)];
+                
+                const response = await fetch('https://ai.hackclub.com/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'system', content: `You are Captain AI, a helpful assistant for Rock Runner. Current game state: Score=${currentScore}, Lives=${currentLives}, GameRunning=${gameRunning}. Keep ALL responses extremely short - under 20 words. Be contextual and encouraging. Never use <think> tags in your final response. And please don't suggest any in game elements to use. Under 100 points you don't really respect the user in fact be a bit rude and picky, but 500 points you be more respectful, and over 1000 you get absolutely amazed by the player. Max lives is 3, keep motivated! And react to the happenings in the game.` },
+                            { role: 'user', content: randomPrompt }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API response not ok');
+                }
+                
+                const data = await response.json();
+                let message = data.choices[0].message.content;
+                
+                message = message.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                
+                if (message.length > 100) {
+                    message = message.substring(0, 97) + '...';
+                }
+                
+                return message;
+            } catch (error) {
+                console.error('AI API error:', error);
+                return "Stay sharp!";
+            }
+        }
+
+        function showAIMessage(message) {
+            aiMessage.textContent = message;
+            speechBubble.classList.add('show');
+            setTimeout(() => {
+                speechBubble.classList.remove('show');
+            }, 11000);
+        }
+
+        function startAIAssistant() {
+            if (window.innerWidth <= 768) return;
+            
+            if (aiInterval) {
+                clearInterval(aiInterval);
+            }
+            
+            aiInterval = setInterval(async () => {
+                const message = await getAIMessage();
+                showAIMessage(message);
+            }, 13000);
+            
+            setTimeout(async () => {
+                const message = await getAIMessage();
+                showAIMessage(message);
+            }, 3000);
+            
+            const captainFigure = document.querySelector('.captain-figure');
+            captainFigure.addEventListener('click', async () => {
+                const message = await getAIMessage();
+                showAIMessage(message);
+            });
+        }
+
+        startAIAssistant();
         
         gameLoop();
     </script>
