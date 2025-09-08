@@ -776,6 +776,86 @@
             transform: scale(1.05);
         }
 
+        .pause-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            color: #ffff00;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,0,0.3);
+            border: 2px solid #ffff00;
+            z-index: 35;
+            font-family: 'Orbitron', monospace;
+            backdrop-filter: blur(10px);
+        }
+
+        .pause-menu h2 {
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,0,0.8);
+        }
+
+        .pause-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .pause-btn {
+            background: #ffff00;
+            color: #000000;
+            border: 2px solid #cccc00;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255,255,0,0.5);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            min-width: 150px;
+        }
+
+        .pause-btn:hover {
+            background: #cccc00;
+            box-shadow: 0 0 15px rgba(255,255,0,0.8);
+            transform: scale(1.05);
+        }
+
+        .resume-btn {
+            background: #00ff00;
+            border-color: #00cc00;
+            box-shadow: 0 0 10px rgba(0,255,0,0.5);
+        }
+
+        .resume-btn:hover {
+            background: #00cc00;
+            box-shadow: 0 0 15px rgba(0,255,0,0.8);
+        }
+
+        .quit-btn {
+            background: #ff4444;
+            border-color: #cc0000;
+            box-shadow: 0 0 10px rgba(255,68,68,0.5);
+        }
+
+        .quit-btn:hover {
+            background: #cc0000;
+            box-shadow: 0 0 15px rgba(255,68,68,0.8);
+        }
+
         .instructions {
             position: absolute;
             bottom: 20px;
@@ -810,8 +890,15 @@
             transform: translateX(-50%);
             display: none;
             z-index: 25;
-            gap: 30px;
+            gap: 60px;
             align-items: center;
+        }
+        
+        .pause-btn-mobile {
+            position: absolute;
+            top: 20px;
+            right: 140px;
+            z-index: 26;
         }
         
         .mobile-btn {
@@ -842,13 +929,24 @@
             box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
         }
         
-        .mobile-btn:hover {
-            background: rgba(255, 255, 0, 0.3);
-            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+        .pause-btn-mobile {
+            background: rgba(255, 255, 0, 0.2);
+            border: 3px solid rgba(255, 255, 0, 0.8);
+            color: #ffff00;
+        }
+        
+        .pause-btn-mobile:active {
+            background: rgba(255, 255, 0, 0.4);
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
         }
         
         @media (max-width: 768px) {
             .mobile-controls {
+                display: flex;
+            }
+            
+            .pause-btn-mobile {
                 display: flex;
             }
             
@@ -908,6 +1006,22 @@
                 padding: 12px 25px;
                 font-size: 16px;
             }
+            
+            .pause-menu {
+                padding: 30px;
+                max-width: 90vw;
+            }
+            
+            .pause-menu h2 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            
+            .pause-btn {
+                padding: 12px 20px;
+                font-size: 14px;
+                min-width: 120px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -943,6 +1057,14 @@
                 width: 70px;
                 height: 70px;
                 font-size: 28px;
+            }
+            
+            .pause-btn-mobile {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+                top: 15px;
+                right: 120px;
             }
             
             .game-over h2 {
@@ -1190,6 +1312,15 @@
             <button class="restart-btn" onclick="restartGame()">Drive Again</button>
         </div>
         
+        <div class="pause-menu" id="pauseMenu">
+            <h2>Game Paused</h2>
+            <div class="pause-options">
+                <button class="pause-btn resume-btn" onclick="resumeGame()">Resume</button>
+                <button class="pause-btn restart-btn" onclick="restartGame()">Restart</button>
+                <button class="pause-btn quit-btn" onclick="quitGame()">Quit</button>
+            </div>
+        </div>
+        
         <div class="ai-assistant" id="aiAssistant">
             <div class="captain-figure">🧑‍🚀</div>
             <div class="speech-bubble" id="speechBubble">
@@ -1198,13 +1329,15 @@
         </div>
         
         <div class="instructions">
-            Use ← → arrow keys or A/D to change lanes • Avoid the particles!
+            Use ← → arrow keys or A/D to change lanes • Press P or Space to pause • Avoid the particles!
         </div>
         
         <div class="mobile-controls">
             <div class="mobile-btn" id="leftBtn">←</div>
             <div class="mobile-btn" id="rightBtn">→</div>
         </div>
+        
+        <div class="mobile-btn pause-btn-mobile" id="pauseBtn">⏸️</div>
     </div>
 
     <script>
@@ -1213,6 +1346,7 @@
     const scoreElement = document.getElementById('score');
     const livesContainer = document.getElementById('livesContainer');
     const gameOverElement = document.getElementById('gameOver');
+    const pauseMenuElement = document.getElementById('pauseMenu');
     const finalScoreElement = document.getElementById('finalScore');
     const road = document.querySelector('.road');
 
@@ -1230,6 +1364,7 @@
             lives: 3,
             particles: [],
             gameRunning: true,
+            isPaused: false,
             particleSpeed: 6,
             baseSpawnRate: 0.015,
             spawnRate: 0.015,
@@ -1256,6 +1391,17 @@
             if (!keys[e.key]) {
                 keys[e.key] = true;
                 handleInput(e.key);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape' || e.key === ' ') {
+                e.preventDefault();
+                if (gameState.gameRunning && !gameState.isPaused) {
+                    pauseGame();
+                } else if (gameState.isPaused) {
+                    resumeGame();
+                }
             }
         });
 
@@ -1301,6 +1447,7 @@
 
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
 
         if (leftBtn) {
             leftBtn.addEventListener('touchstart', (e) => {
@@ -1326,8 +1473,28 @@
             });
         }
 
+        if (pauseBtn) {
+            pauseBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState.gameRunning && !gameState.isPaused) {
+                    pauseGame();
+                } else if (gameState.isPaused) {
+                    resumeGame();
+                }
+            });
+            
+            pauseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (gameState.gameRunning && !gameState.isPaused) {
+                    pauseGame();
+                } else if (gameState.isPaused) {
+                    resumeGame();
+                }
+            });
+        }
+
         function handleInput(key) {
-            if (!gameState.gameRunning) return;
+            if (!gameState.gameRunning || gameState.isPaused) return;
             
             const currentTime = Date.now();
             
@@ -1544,6 +1711,31 @@
                 gameOverText.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 gameOverText.style.setProperty('border-color', newColor, 'important');
                 gameOverText.style.setProperty('box-shadow', `0 10px 30px rgba(0,0,0,0.8), 0 0 20px ${newColor}`, 'important');
+            }
+            
+            const pauseMenu = document.getElementById('pauseMenu');
+            if (pauseMenu) {
+                const pauseMenuHeading = pauseMenu.querySelector('h2');
+                const pauseButtons = pauseMenu.querySelectorAll('.pause-btn');
+                
+                if (pauseMenuHeading) {
+                    pauseMenuHeading.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    pauseMenuHeading.style.setProperty('color', newColor, 'important');
+                    pauseMenuHeading.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}`, 'important');
+                }
+                
+                pauseButtons.forEach(button => {
+                    if (!button.classList.contains('resume-btn') && !button.classList.contains('quit-btn')) {
+                        button.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        button.style.setProperty('background', newColor, 'important');
+                        button.style.setProperty('border-color', shadeColor(newColor, -25), 'important');
+                        button.style.setProperty('box-shadow', `0 0 10px ${newColor}`, 'important');
+                    }
+                });
+                
+                pauseMenu.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                pauseMenu.style.setProperty('border-color', newColor, 'important');
+                pauseMenu.style.setProperty('box-shadow', `0 10px 30px rgba(0,0,0,0.8), 0 0 20px ${newColor}`, 'important');
             }
             
             const hearts = document.querySelectorAll('.heart:not(.lost)');
@@ -2027,6 +2219,80 @@
             }
         }
 
+        function pauseGame() {
+            if (!gameState.gameRunning || gameState.isPaused) return;
+            
+            gameState.isPaused = true;
+            pauseMenuElement.style.display = 'block';
+            
+            const road = document.querySelector('.road');
+            if (road) {
+                road.style.animationPlayState = 'paused';
+            }
+            
+            document.body.style.animationPlayState = 'paused';
+            
+            const allParticles = document.querySelectorAll('.particle');
+            allParticles.forEach(particle => {
+                particle.style.animationPlayState = 'paused';
+            });
+            
+            const thrusters = document.querySelectorAll('.wheel');
+            thrusters.forEach(thruster => {
+                thruster.style.animationPlayState = 'paused';
+            });
+            
+            const captainFigure = document.querySelector('.captain-figure');
+            if (captainFigure) {
+                captainFigure.style.animationPlayState = 'paused';
+            }
+            
+            const speechBubble = document.getElementById('speechBubble');
+            if (speechBubble) {
+                speechBubble.style.animationPlayState = 'paused';
+            }
+        }
+
+        function resumeGame() {
+            if (!gameState.isPaused) return;
+            
+            gameState.isPaused = false;
+            pauseMenuElement.style.display = 'none';
+            
+            const road = document.querySelector('.road');
+            if (road) {
+                road.style.animationPlayState = 'running';
+            }
+            
+            document.body.style.animationPlayState = 'running';
+            
+            const allParticles = document.querySelectorAll('.particle');
+            allParticles.forEach(particle => {
+                particle.style.animationPlayState = 'running';
+            });
+            
+            const thrusters = document.querySelectorAll('.wheel');
+            thrusters.forEach(thruster => {
+                thruster.style.animationPlayState = 'running';
+            });
+            
+            const captainFigure = document.querySelector('.captain-figure');
+            if (captainFigure) {
+                captainFigure.style.animationPlayState = 'running';
+            }
+            
+            const speechBubble = document.getElementById('speechBubble');
+            if (speechBubble) {
+                speechBubble.style.animationPlayState = 'running';
+            }
+        }
+
+        function quitGame() {
+            if (confirm('Are you sure you want to quit? Your progress will be lost.')) {
+                window.location.reload();
+            }
+        }
+
     function restartGame() {
             gameState = {
                 currentLane: 1,
@@ -2042,6 +2308,7 @@
                 lives: 3,
                 particles: [],
                 gameRunning: true,
+                isPaused: false,
                 particleSpeed: 6,
                 baseSpawnRate: 0.015,
                 spawnRate: 0.015,
@@ -2075,6 +2342,7 @@
             scoreElement.textContent = '0';
             updateHearts();
             gameOverElement.style.display = 'none';
+            pauseMenuElement.style.display = 'none';
 
             updateCarPosition();
             car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
@@ -2104,14 +2372,13 @@
             
             startAIAssistant();
         }        function gameLoop() {
-            if (gameState.gameRunning) {
+            if (gameState.gameRunning && !gameState.isPaused) {
                 try {
                     updateCarPosition();
                     updateScore();
                     spawnParticlesFrame();
                     updateParticles();
                 } catch (error) {
-                    console.error('Game loop error:', error);
                     gameState.particles = gameState.particles.filter(p => p.element && p.element.parentNode);
                 }
             }
@@ -2278,7 +2545,6 @@
                 
                 return message;
             } catch (error) {
-                console.error('AI API error:', error);
                 return "Stay sharp!";
             }
         }
@@ -2299,19 +2565,25 @@
             }
             
             aiInterval = setInterval(async () => {
-                const message = await getAIMessage();
-                showAIMessage(message);
+                if (!gameState.isPaused) {
+                    const message = await getAIMessage();
+                    showAIMessage(message);
+                }
             }, 13000);
             
             setTimeout(async () => {
-                const message = await getAIMessage();
-                showAIMessage(message);
+                if (!gameState.isPaused) {
+                    const message = await getAIMessage();
+                    showAIMessage(message);
+                }
             }, 3000);
             
             const captainFigure = document.querySelector('.captain-figure');
             captainFigure.addEventListener('click', async () => {
-                const message = await getAIMessage();
-                showAIMessage(message);
+                if (!gameState.isPaused) {
+                    const message = await getAIMessage();
+                    showAIMessage(message);
+                }
             });
         }
 
