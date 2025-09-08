@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Lane Runner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --theme-color: rgba(255, 255, 0, 1);
+            --theme-color-dim: rgba(255, 255, 0, 0.8);
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -16,9 +21,6 @@
 
         body {
             background: radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 40%, #000000 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
             margin: 0;
             padding: 0;
             width: 100vw;
@@ -187,13 +189,15 @@
         }
 
         .game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
             background: linear-gradient(to bottom, 
                 rgba(0, 0, 0, 0.05) 0%, 
                 rgba(10, 10, 0, 0.02) 30%, 
                 rgba(0, 0, 0, 0.1) 100%);
-            position: relative;
             border: none;
             border-radius: 0;
             overflow: hidden;
@@ -266,7 +270,7 @@
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1), filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: transform 0.2s ease-out, filter 0.5s ease-out;
             z-index: 10;
             filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.3));
         }
@@ -325,14 +329,14 @@
         @keyframes thruster {
             0% { 
                 box-shadow: 
-                    0 0 10px rgba(255, 255, 0, 0.8),
+                    0 0 10px var(--theme-color-dim),
                     inset 0 0 5px rgba(255, 255, 255, 0.3);
                 height: 30px;
                 transform: scaleY(1);
             }
             100% { 
                 box-shadow: 
-                    0 0 15px rgba(255, 255, 0, 1),
+                    0 0 15px var(--theme-color),
                     inset 0 0 8px rgba(255, 255, 255, 0.4);
                 height: 35px;
                 transform: scaleY(1.1);
@@ -340,16 +344,16 @@
         }
 
         @keyframes thrusterBoost {
-            0%, 100% { 
+            0%, 100% {
                 box-shadow: 
-                    0 0 15px rgba(255, 255, 0, 1),
+                    0 0 15px var(--theme-color),
                     inset 0 0 8px rgba(255, 255, 255, 0.4);
                 height: 35px;
                 transform: scaleY(1.1);
             }
-            50% { 
+            50% {
                 box-shadow: 
-                    0 0 25px rgba(255, 255, 0, 1),
+                    0 0 25px var(--theme-color),
                     inset 0 0 12px rgba(255, 255, 255, 0.6);
                 height: 45px;
                 transform: scaleY(1.3);
@@ -407,11 +411,11 @@
 
         @keyframes pulse {
             0%, 100% { 
-                box-shadow: 0 0 15px rgba(255, 255, 0, 1);
+                box-shadow: 0 0 15px var(--theme-color);
                 transform: translateX(-50%) scale(1);
             }
             50% { 
-                box-shadow: 0 0 25px rgba(255, 255, 0, 1);
+                box-shadow: 0 0 25px var(--theme-color);
                 transform: translateX(-50%) scale(1.2);
             }
         }
@@ -589,7 +593,7 @@
         @keyframes asteroidFloat {
             0% { 
                 box-shadow: 
-                    0 0 8px rgba(139, 115, s85, 0.4),
+                    0 0 8px rgba(139, 115, 85, 0.4),
                     inset -8px -8px 15px rgba(0, 0, 0, 0.6),
                     inset 4px 4px 8px rgba(139, 115, 85, 0.3);
             }
@@ -789,15 +793,162 @@
 
         .lane {
             position: absolute;
-            width: 150px;
+            width: 25vw;
             height: 100%;
-            border-right: 1px dashed rgba(0, 255, 255, 0.2);
+            border-right: 2px dashed rgba(0, 255, 255, 0.3);
         }
 
         .lane:nth-child(1) { left: 0; }
-        .lane:nth-child(2) { left: 150px; }
-        .lane:nth-child(3) { left: 300px; }
-        .lane:nth-child(4) { left: 450px; border-right: none; }
+        .lane:nth-child(2) { left: 25vw; }
+        .lane:nth-child(3) { left: 50vw; }
+        .lane:nth-child(4) { left: 75vw; border-right: none; }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            z-index: 25;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .mobile-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 0, 0.2);
+            border: 3px solid rgba(255, 255, 0, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+            user-select: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .mobile-btn:active {
+            background: rgba(255, 255, 0, 0.4);
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+        }
+        
+        .mobile-btn:hover {
+            background: rgba(255, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+            
+            .instructions {
+                display: none;
+            }
+            
+            .score {
+                font-size: 24px;
+                top: 15px;
+                left: 15px;
+            }
+            
+            .lives {
+                font-size: 20px;
+                top: 15px;
+                right: 15px;
+            }
+            
+            .heart {
+                width: 24px;
+                height: 24px;
+                font-size: 20px;
+            }
+            
+            .heart::before {
+                line-height: 24px;
+            }
+            
+            .car {
+                width: 50px;
+                height: 100px;
+                bottom: 120px;
+            }
+            
+            .particle {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .game-over {
+                padding: 30px;
+                max-width: 90vw;
+            }
+            
+            .game-over h2 {
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+            
+            .game-over p {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            
+            .restart-btn {
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .score {
+                font-size: 20px;
+            }
+            
+            .lives {
+                font-size: 18px;
+            }
+            
+            .heart {
+                width: 20px;
+                height: 20px;
+                font-size: 18px;
+            }
+            
+            .heart::before {
+                line-height: 20px;
+            }
+            
+            .car {
+                width: 45px;
+                height: 90px;
+            }
+            
+            .particle {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .mobile-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+            
+            .game-over h2 {
+                font-size: 24px;
+            }
+        }
 
         @keyframes themeWave {
             0% {
@@ -826,6 +977,36 @@
             100% {
                 transform: translate(calc(-50% + var(--dx) * 1.5), calc(-50% + var(--dy) * 1.5)) scale(0);
                 opacity: 0;
+            }
+        }
+
+        @keyframes trailFade {
+            0% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+        }
+
+        @keyframes burstParticle {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            70% {
+                opacity: 0.6;
+                transform: translate(0, 0) scale(1.3);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0.2);
             }
         }
 
@@ -885,6 +1066,11 @@
         <div class="instructions">
             Use ← → arrow keys or A/D to change lanes • Avoid the particles!
         </div>
+        
+        <div class="mobile-controls">
+            <div class="mobile-btn" id="leftBtn">←</div>
+            <div class="mobile-btn" id="rightBtn">→</div>
+        </div>
     </div>
 
     <script>
@@ -902,6 +1088,10 @@
             currentPosition: 0,
             targetPosition: 0,
             velocity: 0,
+            acceleration: 0,
+            maxSpeed: 8,
+            friction: 0.85,
+            turnForce: 0.6,
             score: 0,
             lives: 3,
             particles: [],
@@ -915,12 +1105,18 @@
             isTransitioning: false,
             lastTurnTime: 0,
             lastScoreTime: Date.now(),
-            themeColor: '#ffff00'
+            themeColor: '#ffff00',
+            rotationVelocity: 0,
+            currentRotation: 0,
+            lastMoveDirection: 0,
+            boostTime: 0,
+            trailParticles: []
         };
 
-    const lanePositions = [window.innerWidth * 0.2, window.innerWidth * 0.4, window.innerWidth * 0.6, window.innerWidth * 0.8];
+    const lanePositions = [window.innerWidth * 0.125, window.innerWidth * 0.375, window.innerWidth * 0.625, window.innerWidth * 0.875];
         let keys = {};
-        let inputCooldown = false;
+
+        recomputeLanes();
 
         document.addEventListener('keydown', (e) => {
             if (!keys[e.key]) {
@@ -933,43 +1129,172 @@
             keys[e.key] = false;
         });
 
-        function handleInput(key) {
-            if (!gameState.gameRunning || inputCooldown) return;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
 
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                isSwiping = true;
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            if (!isSwiping) return;
+            
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (deltaX > 0) {
+                    handleInput('ArrowRight');
+                } else {
+                    handleInput('ArrowLeft');
+                }
+            }
+            
+            isSwiping = false;
+        });
+
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+
+        if (leftBtn) {
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleInput('ArrowLeft');
+            });
+            
+            leftBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleInput('ArrowLeft');
+            });
+        }
+
+        if (rightBtn) {
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleInput('ArrowRight');
+            });
+            
+            rightBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleInput('ArrowRight');
+            });
+        }
+
+        function handleInput(key) {
+            if (!gameState.gameRunning) return;
+            
             const currentTime = Date.now();
-            if (currentTime - gameState.lastTurnTime < 200) return;
+            
+            if (currentTime - gameState.lastTurnTime < 150) return;
 
             if ((key === 'ArrowLeft' || key === 'a' || key === 'A') && gameState.targetLane > 0) {
                 gameState.targetLane--;
-                initiateTurn();
+                initiateTurn('left');
                 gameState.lastTurnTime = currentTime;
             }
             if ((key === 'ArrowRight' || key === 'd' || key === 'D') && gameState.targetLane < 3) {
                 gameState.targetLane++;
-                initiateTurn();
+                initiateTurn('right');
                 gameState.lastTurnTime = currentTime;
             }
         }
 
-        function initiateTurn() {
+        function initiateTurn(direction) {
             gameState.isTransitioning = true;
             gameState.targetPosition = lanePositions[gameState.targetLane];
+            gameState.lastMoveDirection = direction === 'left' ? -1 : 1;
+            gameState.boostTime = Date.now();
 
             const thrusters = document.querySelectorAll('.wheel');
             thrusters.forEach(thruster => {
-                thruster.style.animation = 'thrusterBoost 0.3s ease-out';
+                thruster.style.animation = 'thrusterBoost 0.4s ease-out';
+                thruster.style.transform = `scaleY(1.3) ${direction === 'left' ? 'skewX(-2deg)' : 'skewX(2deg)'}`;
             });
 
             setTimeout(() => {
                 thrusters.forEach(thruster => {
                     thruster.style.animation = 'thruster 0.1s infinite alternate';
+                    thruster.style.transform = 'scaleY(1) skewX(0deg)';
                 });
-            }, 300);
-            
-            inputCooldown = true;
-            setTimeout(() => {
-                inputCooldown = false;
             }, 400);
+            
+            createMovementTrail(direction);
+            
+            createScreenShake();
+        }
+
+        function createMovementTrail(direction) {
+            const trailCount = 5;
+            const car = document.getElementById('car');
+            const carRect = car.getBoundingClientRect();
+            
+            for (let i = 0; i < trailCount; i++) {
+                setTimeout(() => {
+                    const trail = document.createElement('div');
+                    trail.style.cssText = `
+                        position: absolute;
+                        width: 40px;
+                        height: 40px;
+                        left: ${gameState.currentPosition - 20}px;
+                        top: ${carRect.top + window.scrollY + 40}px;
+                        background: radial-gradient(circle, ${gameState.themeColor}40 0%, transparent 70%);
+                        border-radius: 50%;
+                        pointer-events: none;
+                        z-index: 5;
+                        animation: trailFade 0.8s ease-out forwards;
+                    `;
+                    
+                    gameContainer.appendChild(trail);
+                    gameState.trailParticles.push(trail);
+                    
+                    setTimeout(() => {
+                        if (trail.parentNode) {
+                            trail.remove();
+                        }
+                        gameState.trailParticles = gameState.trailParticles.filter(p => p !== trail);
+                    }, 800);
+                }, i * 50);
+            }
+        }
+
+        function createScreenShake() {
+            const intensity = 3;
+            const duration = 150;
+            
+            const originalTransform = gameContainer.style.transform || '';
+            
+            let startTime = Date.now();
+            function shake() {
+                const elapsed = Date.now() - startTime;
+                if (elapsed > duration) {
+                    gameContainer.style.transform = originalTransform;
+                    return;
+                }
+                
+                const progress = elapsed / duration;
+                const currentIntensity = intensity * (1 - progress);
+                
+                const x = (Math.random() - 0.5) * currentIntensity;
+                const y = (Math.random() - 0.5) * currentIntensity;
+                
+                gameContainer.style.transform = `${originalTransform} translate(${x}px, ${y}px)`;
+                
+                requestAnimationFrame(shake);
+            }
+            
+            shake();
         }
 
         function updateScore() {
@@ -982,10 +1307,10 @@
                 
                 if (gameState.score % 30 === 0 && gameState.score > 0) {
                     changeThemeColor();
-                    gameState.particleSpeed += 0.2;
-                    gameState.baseSpawnRate += 0.003;
+                    gameState.particleSpeed = Math.min(12, gameState.particleSpeed + 0.2);
+                    gameState.baseSpawnRate = Math.min(0.05, gameState.baseSpawnRate + 0.003);
                     applySpawnSettings();
-                    gameState.gameSpeed += 0.2;
+                    gameState.gameSpeed = Math.min(3, gameState.gameSpeed + 0.2);
                     
                     const road = document.querySelector('.road');
                     road.style.animationDuration = (15 / gameState.gameSpeed) + 's';
@@ -1039,7 +1364,6 @@
 
         function changeThemeColor() {
             const newColor = generateRandomColor();
-            console.log('Changing theme color to:', newColor);
             gameState.themeColor = newColor;
             createThemeChangeEffect(newColor);
             
@@ -1204,37 +1528,6 @@
                 }
                 .lane:nth-child(4) { border-right: none !important; }
                 
-                @keyframes thruster {
-                    0% { 
-                        box-shadow: 0 0 10px ${newColor}, inset 0 0 5px rgba(255,255,255,0.3);
-                        height: 30px; transform: scaleY(1);
-                    }
-                    100% { 
-                        box-shadow: 0 0 15px ${newColor}, inset 0 0 8px rgba(255,255,255,0.4);
-                        height: 35px; transform: scaleY(1.1);
-                    }
-                }
-                @keyframes thrusterBoost {
-                    0%, 100% {
-                        box-shadow: 0 0 15px ${newColor}, inset 0 0 8px rgba(255,255,255,0.4);
-                        height: 35px; transform: scaleY(1.1);
-                    }
-                    50% {
-                        box-shadow: 0 0 25px ${newColor}, inset 0 0 12px rgba(255,255,255,0.6);
-                        height: 45px; transform: scaleY(1.3);
-                    }
-                }
-                @keyframes pulse {
-                    0%, 100% { 
-                        box-shadow: 0 0 15px ${newColor}; 
-                        transform: translateX(-50%) scale(1); 
-                    }
-                    50% { 
-                        box-shadow: 0 0 25px ${newColor}; 
-                        transform: translateX(-50%) scale(1.2); 
-                    }
-                }
-                
                 @keyframes scoreBoost {
                     0% {
                         transform: scale(1) !important;
@@ -1254,6 +1547,17 @@
                 }
             `;
             document.head.appendChild(style);
+            
+            document.documentElement.style.setProperty('--theme-color', newColor);
+            document.documentElement.style.setProperty('--theme-color-dim', rgbaString(newColor, 0.8));
+            
+            const mobileButtons = document.querySelectorAll('.mobile-btn');
+            mobileButtons.forEach(btn => {
+                btn.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                btn.style.setProperty('color', newColor, 'important');
+                btn.style.setProperty('border-color', rgbaString(newColor, 0.8), 'important');
+                btn.style.setProperty('text-shadow', `0 0 10px ${newColor}`, 'important');
+            });
             
             car.style.transition = 'filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.35)})`;
@@ -1329,42 +1633,137 @@
         function updateCarPosition() {
             if (!gameState.isTransitioning) {
                 gameState.currentPosition = lanePositions[gameState.currentLane];
+                gameState.velocity *= 0.95;
+                gameState.rotationVelocity *= 0.9;
+                gameState.currentRotation += gameState.rotationVelocity;
+                gameState.currentRotation *= 0.95;
+                
                 car.style.left = gameState.currentPosition - 30 + 'px';
+                car.style.transform = `rotate(${gameState.currentRotation * 0.5}deg)`;
                 return;
             }
-            const distance = gameState.targetPosition - gameState.currentPosition;
-            const acceleration = distance * 0.08;
-            gameState.velocity = (gameState.velocity + acceleration) * 0.92;
-            gameState.currentPosition += gameState.velocity;
 
-            if (Math.abs(distance) < 1.5 && Math.abs(gameState.velocity) < 0.3) {
+            const distance = gameState.targetPosition - gameState.currentPosition;
+            const maxDistance = Math.abs(lanePositions[1] - lanePositions[0]);
+            
+            const distanceRatio = Math.abs(distance) / maxDistance;
+            let dynamicTurnForce = gameState.turnForce;
+            
+            const timeSinceBoost = Date.now() - gameState.boostTime;
+            if (timeSinceBoost < 200) {
+                dynamicTurnForce *= 1.8;
+            }
+            
+            if (Math.abs(distance) > 2) {
+                const forceDirection = Math.sign(distance);
+                gameState.acceleration = forceDirection * dynamicTurnForce * distanceRatio;
+            } else {
+                gameState.acceleration = -gameState.velocity * 0.3;
+            }
+            
+            gameState.velocity += gameState.acceleration;
+            gameState.velocity = Math.max(-gameState.maxSpeed, Math.min(gameState.maxSpeed, gameState.velocity));
+            gameState.velocity *= gameState.friction;
+            
+            gameState.currentPosition += gameState.velocity;
+            
+            const targetRotation = gameState.velocity * 2.5;
+            gameState.rotationVelocity += (targetRotation - gameState.currentRotation) * 0.15;
+            gameState.rotationVelocity *= 0.85;
+            gameState.currentRotation += gameState.rotationVelocity;
+            
+            const speedIntensity = Math.abs(gameState.velocity) / gameState.maxSpeed;
+            const glowIntensity = 0.3 + speedIntensity * 0.4;
+            const glowSize = 15 + speedIntensity * 10;
+            
+            const bankingAngle = gameState.currentRotation * 0.3;
+            const totalRotation = gameState.currentRotation + bankingAngle;
+            
+            if (Math.abs(distance) < 3 && Math.abs(gameState.velocity) < 0.8) {
                 gameState.currentPosition = gameState.targetPosition;
                 gameState.currentLane = gameState.targetLane;
                 gameState.velocity = 0;
+                gameState.acceleration = 0;
                 gameState.isTransitioning = false;
-
+                
                 car.style.transform = 'rotate(0deg)';
-                car.style.transition = 'filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
+                car.style.transition = 'transform 0.3s ease-out, filter 0.5s ease-out';
+                car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.35)})`;
+                
+                createArrivalEffect();
+                
             } else {
-                const maxRotation = 2;
-                const rotation = Math.max(-maxRotation, Math.min(maxRotation, gameState.velocity * 0.2));
-
-                const glowIntensity = Math.abs(gameState.velocity) * 0.1 + 0.3;
-                car.style.transform = `rotate(${rotation}deg)`;
-                car.style.transition = 'filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                car.style.filter = `drop-shadow(0 0 ${15 + Math.abs(rotation) * 2}px ${rgbaString(gameState.themeColor, glowIntensity)})`;
+                car.style.transition = 'filter 0.1s ease-out';
+                car.style.transform = `rotate(${totalRotation}deg) scale(${1 + speedIntensity * 0.05})`;
+                car.style.filter = `drop-shadow(0 0 ${glowSize}px ${rgbaString(gameState.themeColor, glowIntensity)}) 
+                                  brightness(${1 + speedIntensity * 0.2})`;
+                
+                updateWingEffects(speedIntensity);
             }
 
             car.style.left = gameState.currentPosition - 30 + 'px';
         }
 
+        function createArrivalEffect() {
+            const burstCount = 3;
+            for (let i = 0; i < burstCount; i++) {
+                setTimeout(() => {
+                    const burst = document.createElement('div');
+                    const angle = (i / burstCount) * Math.PI * 2;
+                    const distance = 25 + Math.random() * 15;
+                    
+                    burst.style.cssText = `
+                        position: absolute;
+                        width: 6px;
+                        height: 6px;
+                        left: ${gameState.currentPosition - 3}px;
+                        top: ${window.innerHeight - 180}px;
+                        background: ${gameState.themeColor};
+                        border-radius: 50%;
+                        pointer-events: none;
+                        z-index: 8;
+                        box-shadow: 0 0 8px ${gameState.themeColor};
+                        animation: burstParticle 0.6s ease-out forwards;
+                        transform: translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px);
+                    `;
+                    
+                    gameContainer.appendChild(burst);
+                    
+                    setTimeout(() => {
+                        if (burst.parentNode) {
+                            burst.remove();
+                        }
+                    }, 600);
+                }, i * 50);
+            }
+        }
+
+        function updateWingEffects(intensity) {
+            const wings = document.querySelectorAll('.wing');
+            const maxSkew = 8;
+            const skewAmount = intensity * maxSkew * gameState.lastMoveDirection;
+            
+            wings.forEach((wing, index) => {
+                const isLeft = wing.classList.contains('left');
+                const direction = isLeft ? -1 : 1;
+                const skew = skewAmount * direction;
+                
+                wing.style.transition = 'transform 0.1s ease-out';
+                wing.style.transform = `skew(0deg, ${skew}deg) scale(${1 + intensity * 0.1})`;
+                
+                const glowIntensity = 0.4 + intensity * 0.6;
+                wing.style.boxShadow = `0 0 ${10 + intensity * 8}px ${rgbaString(gameState.themeColor, glowIntensity)}`;
+            });
+        }
+
         function spawnParticlesFrame() {
             if (gameState.particles.length >= gameState.particleCap) return;
-            const attempts = Math.max(1, gameState.spawnAttempts | 0);
+            
+            const attempts = Math.max(1, Math.min(3, gameState.spawnAttempts | 0));
             for (let i = 0; i < attempts; i++) {
                 if (gameState.particles.length >= gameState.particleCap) break;
                 if (Math.random() >= gameState.spawnRate) continue;
+                
                 const particle = document.createElement('div');
                 particle.className = 'particle';
                 
@@ -1379,24 +1778,16 @@
                 
                 let typeModifier = 1;
                 switch(asteroidType) {
-                    case 1:
-                        typeModifier = 1;
-                        break;
-                    case 2:
-                        typeModifier = 1.1;
-                        break;
-                    case 3:
-                        typeModifier = 0.9;
-                        break;
-                    case 4:
-                        typeModifier = 0.8;
-                        break;
-                    case 5:
-                        typeModifier = 1.2;
-                        break;
+                    case 1: typeModifier = 1; break;
+                    case 2: typeModifier = 1.1; break;
+                    case 3: typeModifier = 0.9; break;
+                    case 4: typeModifier = 0.8; break;
+                    case 5: typeModifier = 1.2; break;
                 }
                 
-                const finalSize = sizeVariation * typeModifier;
+                const isMobile = window.innerWidth <= 768;
+                const mobileScale = isMobile ? 0.8 : 1;
+                const finalSize = sizeVariation * typeModifier * mobileScale;
                 
                 particle.style.left = (laneCenter - 20) + 'px';
                 const spawnY = -80 - Math.random() * 120;
@@ -1417,15 +1808,20 @@
                     particle.style.borderRadius = randomShape;
                 }
                 
-                gameContainer.appendChild(particle);
-                
-                gameState.particles.push({
-                    element: particle,
-                    lane: lane,
-                    y: spawnY,
-                    size: finalSize,
-                    type: asteroidType
-                });
+                try {
+                    gameContainer.appendChild(particle);
+                    gameState.particles.push({
+                        element: particle,
+                        lane: lane,
+                        y: spawnY,
+                        size: finalSize,
+                        type: asteroidType
+                    });
+                } catch (error) {
+                    if (particle.parentNode) {
+                        particle.remove();
+                    }
+                }
             }
         }
 
@@ -1438,10 +1834,12 @@
                 const particleCenterX = lanePositions[particle.lane];
                 const horizontalDistance = Math.abs(carCenterX - particleCenterX);
                 
-                if (horizontalDistance < 40 && 
-                    particle.y > window.innerHeight - 280 && particle.y < window.innerHeight - 120) {
+                if (horizontalDistance < 50 && 
+                    particle.y > window.innerHeight - 300 && particle.y < window.innerHeight - 100) {
                     
-                    particle.element.remove();
+                    if (particle.element && particle.element.parentNode) {
+                        particle.element.remove();
+                    }
                     gameState.lives--;
                     updateHearts();
                     
@@ -1456,10 +1854,15 @@
                     return false;
                 }
 
-                if (particle.y > window.innerHeight) {
-                    const el = particle.element;
-                    el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 140);
+                if (particle.y > window.innerHeight + 100) {
+                    if (particle.element && particle.element.parentNode) {
+                        particle.element.style.opacity = '0';
+                        setTimeout(() => {
+                            if (particle.element && particle.element.parentNode) {
+                                particle.element.remove();
+                            }
+                        }, 140);
+                    }
                     return false;
                 }
 
@@ -1480,20 +1883,43 @@
                 currentPosition: 0,
                 targetPosition: 0,
                 velocity: 0,
+                acceleration: 0,
+                maxSpeed: 8,
+                friction: 0.85,
+                turnForce: 0.6,
                 score: 0,
                 lives: 3,
                 particles: [],
                 gameRunning: true,
                 particleSpeed: 6,
+                baseSpawnRate: 0.015,
                 spawnRate: 0.015,
+                spawnAttempts: 1,
+                particleCap: 60,
                 gameSpeed: 1,
                 isTransitioning: false,
                 lastTurnTime: 0,
                 lastScoreTime: Date.now(),
-                themeColor: gameState.themeColor || '#ffff00'
+                themeColor: gameState.themeColor || '#ffff00',
+                rotationVelocity: 0,
+                currentRotation: 0,
+                lastMoveDirection: 0,
+                boostTime: 0,
+                trailParticles: []
             };
 
-            document.querySelectorAll('.particle').forEach(particle => particle.remove());
+            document.querySelectorAll('.particle').forEach(particle => {
+                if (particle.parentNode) {
+                    particle.remove();
+                }
+            });
+
+            gameState.trailParticles.forEach(trail => {
+                if (trail.parentNode) {
+                    trail.remove();
+                }
+            });
+            gameState.trailParticles = [];
 
             scoreElement.textContent = '0';
             updateHearts();
@@ -1501,16 +1927,36 @@
 
             updateCarPosition();
             car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
+            car.style.transform = 'rotate(0deg) scale(1)';
+            car.style.transition = 'transform 0.3s ease-out, filter 0.5s ease-out';
+
+            const wings = document.querySelectorAll('.wing');
+            wings.forEach(wing => {
+                wing.style.transform = '';
+                wing.style.transition = '';
+                wing.style.boxShadow = '';
+            });
+
+            const thrusters = document.querySelectorAll('.wheel');
+            thrusters.forEach(thruster => {
+                thruster.style.animation = 'thruster 0.1s infinite alternate';
+                thruster.style.transform = '';
+            });
 
             road.style.animationDuration = '15s';
-
-            inputCooldown = false;
+            
+            applySpawnSettings();
         }        function gameLoop() {
             if (gameState.gameRunning) {
-                updateCarPosition();
-                updateScore();
-                spawnParticlesFrame();
-                updateParticles();
+                try {
+                    updateCarPosition();
+                    updateScore();
+                    spawnParticlesFrame();
+                    updateParticles();
+                } catch (error) {
+                    console.error('Game loop error:', error);
+                    gameState.particles = gameState.particles.filter(p => p.element && p.element.parentNode);
+                }
             }
             requestAnimationFrame(gameLoop);
         }
@@ -1541,11 +1987,17 @@
         updateCarPosition();
         updateHearts();
         
+        gameState.currentPosition = lanePositions[gameState.currentLane];
+        gameState.targetPosition = lanePositions[gameState.targetLane];
+        car.style.left = gameState.currentPosition - 30 + 'px';
+        
         function recomputeLanes() {
-            lanePositions[0] = window.innerWidth * 0.2;
-            lanePositions[1] = window.innerWidth * 0.4;
-            lanePositions[2] = window.innerWidth * 0.6;
-            lanePositions[3] = window.innerWidth * 0.8;
+            const laneWidth = window.innerWidth / 4;
+            
+            for (let i = 0; i < 4; i++) {
+                lanePositions[i] = (laneWidth * i) + (laneWidth / 2);
+            }
+            
             gameState.targetPosition = lanePositions[gameState.targetLane];
             if (!gameState.isTransitioning) {
                 gameState.currentPosition = lanePositions[gameState.currentLane];
@@ -1558,15 +2010,23 @@
             applySpawnSettings();
         }
         window.addEventListener('resize', recomputeLanes);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(recomputeLanes, 100);
+        });
 
         function computeSpawnSettings() {
             const area = window.innerWidth * window.innerHeight;
             const baseline = 1280 * 720;
             const scale = Math.sqrt(area / baseline);
-            const capBase = 60;
-            const attempts = Math.max(1, Math.round(0.5 + scale));
-            const cap = Math.max(30, Math.min(140, Math.round(capBase * (0.6 + 0.8 * scale))));
-            const scaledRate = Math.min(0.08, Math.max(0.006, gameState.baseSpawnRate * (0.6 + 0.7 * scale)));
+            
+            const isMobile = window.innerWidth <= 768;
+            const mobileMultiplier = isMobile ? 0.7 : 1;
+            
+            const capBase = 60 * mobileMultiplier;
+            const attempts = Math.max(1, Math.round((0.5 + scale) * mobileMultiplier));
+            const cap = Math.max(20, Math.min(140, Math.round(capBase * (0.6 + 0.8 * scale))));
+            const scaledRate = Math.min(0.08, Math.max(0.006, gameState.baseSpawnRate * (0.6 + 0.7 * scale) * mobileMultiplier));
+            
             return { spawnRate: scaledRate, particleCap: cap, spawnAttempts: attempts };
         }
 
