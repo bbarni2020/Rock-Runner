@@ -266,7 +266,7 @@
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1), filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             z-index: 10;
             filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.3));
         }
@@ -429,6 +429,14 @@
                 inset 4px 4px 8px rgba(139, 115, 85, 0.3);
             animation: asteroidRotate 3s linear infinite, asteroidFloat 2s ease-in-out infinite alternate;
             position: relative;
+            pointer-events: none;
+            will-change: transform, opacity;
+            contain: paint;
+            backface-visibility: hidden;
+            transition: opacity 120ms linear;
+            --py: 0px; 
+            --scale: 1;
+            transform: translate3d(0, var(--py), 0) scale(var(--scale));
         }
 
         .asteroid-type1 {
@@ -571,17 +579,17 @@
         }
 
         @keyframes asteroidRotate {
-            0% { transform: rotate(0deg) scale(1); }
-            25% { transform: rotate(90deg) scale(1.05); }
-            50% { transform: rotate(180deg) scale(0.95); }
-            75% { transform: rotate(270deg) scale(1.02); }
-            100% { transform: rotate(360deg) scale(1); }
+            0% { transform: translate3d(0, var(--py), 0) rotate(0deg) scale(var(--scale)); }
+            25% { transform: translate3d(0, var(--py), 0) rotate(90deg) scale(calc(var(--scale) * 1.05)); }
+            50% { transform: translate3d(0, var(--py), 0) rotate(180deg) scale(calc(var(--scale) * 0.95)); }
+            75% { transform: translate3d(0, var(--py), 0) rotate(270deg) scale(calc(var(--scale) * 1.02)); }
+            100% { transform: translate3d(0, var(--py), 0) rotate(360deg) scale(var(--scale)); }
         }
 
         @keyframes asteroidFloat {
             0% { 
                 box-shadow: 
-                    0 0 8px rgba(139, 115, 85, 0.4),
+                    0 0 8px rgba(139, 115, s85, 0.4),
                     inset -8px -8px 15px rgba(0, 0, 0, 0.6),
                     inset 4px 4px 8px rgba(139, 115, 85, 0.3);
             }
@@ -791,6 +799,52 @@
         .lane:nth-child(3) { left: 300px; }
         .lane:nth-child(4) { left: 450px; border-right: none; }
 
+        @keyframes themeWave {
+            0% {
+                transform: scale(0.1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes themeBurst {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            70% {
+                transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(calc(-50% + var(--dx) * 1.5), calc(-50% + var(--dy) * 1.5)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        body {
+            transition: background 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body::before, body::after {
+            transition: background-image 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .road {
+            transition: background-image 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .lane {
+            transition: border-color 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
     </style>
 </head>
 <body>
@@ -834,12 +888,13 @@
     </div>
 
     <script>
-        const gameContainer = document.querySelector('.game-container');
-        const car = document.getElementById('car');
-        const scoreElement = document.getElementById('score');
-        const livesContainer = document.getElementById('livesContainer');
-        const gameOverElement = document.getElementById('gameOver');
-        const finalScoreElement = document.getElementById('finalScore');
+    const gameContainer = document.querySelector('.game-container');
+    const car = document.getElementById('car');
+    const scoreElement = document.getElementById('score');
+    const livesContainer = document.getElementById('livesContainer');
+    const gameOverElement = document.getElementById('gameOver');
+    const finalScoreElement = document.getElementById('finalScore');
+    const road = document.querySelector('.road');
 
         let gameState = {
             currentLane: 1,
@@ -852,14 +907,18 @@
             particles: [],
             gameRunning: true,
             particleSpeed: 6,
+            baseSpawnRate: 0.015,
             spawnRate: 0.015,
+            spawnAttempts: 1,
+            particleCap: 60,
             gameSpeed: 1,
             isTransitioning: false,
             lastTurnTime: 0,
-            lastScoreTime: Date.now()
+            lastScoreTime: Date.now(),
+            themeColor: '#ffff00'
         };
 
-        const lanePositions = [window.innerWidth * 0.2, window.innerWidth * 0.4, window.innerWidth * 0.6, window.innerWidth * 0.8];
+    const lanePositions = [window.innerWidth * 0.2, window.innerWidth * 0.4, window.innerWidth * 0.6, window.innerWidth * 0.8];
         let keys = {};
         let inputCooldown = false;
 
@@ -924,7 +983,8 @@
                 if (gameState.score % 30 === 0 && gameState.score > 0) {
                     changeThemeColor();
                     gameState.particleSpeed += 0.2;
-                    gameState.spawnRate += 0.003;
+                    gameState.baseSpawnRate += 0.003;
+                    applySpawnSettings();
                     gameState.gameSpeed += 0.2;
                     
                     const road = document.querySelector('.road');
@@ -980,19 +1040,25 @@
         function changeThemeColor() {
             const newColor = generateRandomColor();
             console.log('Changing theme color to:', newColor);
+            gameState.themeColor = newColor;
+            createThemeChangeEffect(newColor);
             
+            const scoreContainer = document.querySelector('.score');
+            if (scoreContainer) {
+                scoreContainer.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                scoreContainer.style.setProperty('color', newColor, 'important');
+                scoreContainer.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor}`, 'important');
+            }
+            scoreElement.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             scoreElement.style.setProperty('color', newColor, 'important');
-            scoreElement.style.setProperty('text-shadow', `
-                2px 2px 4px rgba(0,0,0,0.8), 
-                0 0 15px ${newColor},
-                0 0 25px ${newColor}
-            `, 'important');
+            scoreElement.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor}`, 'important');
             
             const livesElement = document.querySelector('.lives');
             const gameOverText = document.querySelector('.game-over');
             const instructions = document.querySelector('.instructions');
             
             if (instructions) {
+                instructions.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 instructions.style.setProperty('color', newColor, 'important');
                 instructions.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 10px ${newColor}`, 'important');
             }
@@ -1003,20 +1069,28 @@
                 const restartButton = gameOverText.querySelector('button');
                 
                 if (gameOverHeading) {
+                    gameOverHeading.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                     gameOverHeading.style.setProperty('color', newColor, 'important');
                     gameOverHeading.style.setProperty('text-shadow', `2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}`, 'important');
                 }
                 if (gameOverParagraph) {
+                    gameOverParagraph.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                     gameOverParagraph.style.setProperty('color', newColor, 'important');
                 }
                 if (restartButton) {
+                    restartButton.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                     restartButton.style.setProperty('background', `linear-gradient(45deg, ${newColor}, #333)`, 'important');
                     restartButton.style.setProperty('border', `2px solid ${newColor}`, 'important');
+                    restartButton.style.setProperty('box-shadow', `0 0 10px ${newColor}`, 'important');
                 }
+                gameOverText.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                gameOverText.style.setProperty('border-color', newColor, 'important');
+                gameOverText.style.setProperty('box-shadow', `0 10px 30px rgba(0,0,0,0.8), 0 0 20px ${newColor}`, 'important');
             }
             
             const hearts = document.querySelectorAll('.heart:not(.lost)');
             hearts.forEach(heart => {
+                heart.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 heart.style.setProperty('text-shadow', `
                     0 0 10px ${newColor},
                     0 0 20px ${newColor},
@@ -1025,34 +1099,49 @@
             });
             
             const starshipCore = document.querySelector('.starship-core');
-            const leftWing = document.querySelector('.left-wing');
-            const rightWing = document.querySelector('.right-wing');
-            const leftThruster = document.querySelector('.left-thruster');
-            const rightThruster = document.querySelector('.right-thruster');
+            const leftWing = document.querySelector('.wing.left');
+            const rightWing = document.querySelector('.wing.right');
+            const thrusters = document.querySelectorAll('.wheel');
+            const carBody = document.querySelector('.car-body');
+            const windshield = document.querySelector('.car-windshield');
             
             if (starshipCore) {
+                starshipCore.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 starshipCore.style.setProperty('background', `radial-gradient(circle, ${newColor} 0%, #333 100%)`, 'important');
-                starshipCore.style.setProperty('box-shadow', `
-                    0 0 20px ${newColor},
-                    inset -3px -3px 6px rgba(0, 0, 0, 0.6),
-                    inset 3px 3px 6px rgba(255, 255, 255, 0.2)
-                `, 'important');
+                starshipCore.style.setProperty('box-shadow', `0 0 20px ${newColor}, inset -3px -3px 6px rgba(0, 0, 0, 0.6), inset 3px 3px 6px rgba(255, 255, 255, 0.2)`, 'important');
             }
             
             if (leftWing && rightWing) {
                 const wingColor = `linear-gradient(45deg, ${newColor} 0%, #666 50%, #333 100%)`;
                 const wingGlow = `0 0 15px ${newColor}, inset -2px -2px 4px rgba(0, 0, 0, 0.5)`;
-                
+                leftWing.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 leftWing.style.setProperty('background', wingColor, 'important');
                 leftWing.style.setProperty('box-shadow', wingGlow, 'important');
+                leftWing.style.setProperty('border-color', newColor, 'important');
+                rightWing.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 rightWing.style.setProperty('background', wingColor, 'important');
                 rightWing.style.setProperty('box-shadow', wingGlow, 'important');
+                rightWing.style.setProperty('border-color', newColor, 'important');
             }
             
-            if (leftThruster && rightThruster) {
-                const thrusterColor = `radial-gradient(circle, ${newColor} 0%, #ff4444 100%)`;
-                leftThruster.style.setProperty('background', thrusterColor, 'important');
-                rightThruster.style.setProperty('background', thrusterColor, 'important');
+            if (carBody) {
+                carBody.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                carBody.style.setProperty('border-color', newColor, 'important');
+                carBody.style.setProperty('box-shadow', `0 0 20px ${newColor}, inset 0 0 10px rgba(255, 255, 255, 0.2)`, 'important');
+            }
+            if (windshield) {
+                windshield.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                windshield.style.setProperty('border-color', newColor, 'important');
+                windshield.style.setProperty('box-shadow', `0 0 15px ${newColor}, inset 0 0 10px rgba(255, 255, 255, 0.1)`, 'important');
+                windshield.style.setProperty('background', `linear-gradient(to bottom, ${rgbaString(newColor,0.8)} 0%, ${rgbaString(newColor,0.6)} 50%, ${rgbaString(newColor,0.4)} 100%)`, 'important');
+            }
+            if (thrusters && thrusters.length) {
+                thrusters.forEach(t => {
+                    t.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    t.style.setProperty('border-color', shadeColor(newColor, -25), 'important');
+                    t.style.setProperty('box-shadow', `0 0 10px ${newColor}, inset 0 0 5px rgba(255,255,255,0.3)`, 'important');
+                    t.style.setProperty('background', `linear-gradient(to bottom, ${newColor} 0%, ${shadeColor(newColor, -20)} 50%, ${newColor} 100%)`, 'important');
+                });
             }
             
             scoreElement.style.transform = 'scale(1.5)';
@@ -1067,6 +1156,13 @@
                 existingStyle.remove();
             }
             
+            const backgroundElements = [document.body];
+            backgroundElements.forEach(el => {
+                if (el) {
+                    el.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                }
+            });
+            
             const style = document.createElement('style');
             style.id = 'dynamic-score-style';
             style.textContent = `
@@ -1077,6 +1173,7 @@
                         radial-gradient(1px 1px at 90px 40px, ${newColor}, transparent),
                         radial-gradient(1px 1px at 130px 80px, ${newColor}, transparent),
                         radial-gradient(2px 2px at 160px 30px, ${newColor}, transparent) !important;
+                    transition: background-image 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
                 }
                 
                 body::after {
@@ -1086,40 +1183,135 @@
                         radial-gradient(2px 2px at 140px 20px, ${newColor}, transparent),
                         radial-gradient(1px 1px at 180px 60px, ${newColor}, transparent),
                         radial-gradient(2px 2px at 80px 120px, ${newColor}, transparent) !important;
+                    transition: background-image 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
                 }
                 
-                .score-increase {
-                    animation: scoreBoost 0.6s ease-out !important;
+                .road { 
+                    background-image:
+                        radial-gradient(1px 1px at 10% 20%, ${newColor}, transparent),
+                        radial-gradient(2px 2px at 25% 40%, ${newColor}, transparent),
+                        radial-gradient(1px 1px at 40% 10%, ${newColor}, transparent),
+                        radial-gradient(3px 3px at 60% 30%, ${newColor}, transparent),
+                        radial-gradient(1px 1px at 75% 60%, ${newColor}, transparent),
+                        radial-gradient(2px 2px at 90% 80%, ${newColor}, transparent),
+                        radial-gradient(1px 1px at 15% 70%, ${newColor}, transparent),
+                        radial-gradient(2px 2px at 85% 15%, ${newColor}, transparent) !important;
+                    transition: background-image 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+                }
+                .lane { 
+                    border-right: 1px dashed ${rgbaString(newColor,0.25)} !important; 
+                    transition: border-color 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+                }
+                .lane:nth-child(4) { border-right: none !important; }
+                
+                @keyframes thruster {
+                    0% { 
+                        box-shadow: 0 0 10px ${newColor}, inset 0 0 5px rgba(255,255,255,0.3);
+                        height: 30px; transform: scaleY(1);
+                    }
+                    100% { 
+                        box-shadow: 0 0 15px ${newColor}, inset 0 0 8px rgba(255,255,255,0.4);
+                        height: 35px; transform: scaleY(1.1);
+                    }
+                }
+                @keyframes thrusterBoost {
+                    0%, 100% {
+                        box-shadow: 0 0 15px ${newColor}, inset 0 0 8px rgba(255,255,255,0.4);
+                        height: 35px; transform: scaleY(1.1);
+                    }
+                    50% {
+                        box-shadow: 0 0 25px ${newColor}, inset 0 0 12px rgba(255,255,255,0.6);
+                        height: 45px; transform: scaleY(1.3);
+                    }
+                }
+                @keyframes pulse {
+                    0%, 100% { 
+                        box-shadow: 0 0 15px ${newColor}; 
+                        transform: translateX(-50%) scale(1); 
+                    }
+                    50% { 
+                        box-shadow: 0 0 25px ${newColor}; 
+                        transform: translateX(-50%) scale(1.2); 
+                    }
                 }
                 
                 @keyframes scoreBoost {
                     0% {
                         transform: scale(1) !important;
                         color: ${newColor} !important;
-                        text-shadow: 
-                            2px 2px 4px rgba(0,0,0,0.8), 
-                            0 0 15px ${newColor},
-                            0 0 25px ${newColor} !important;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor} !important;
                     }
                     25% {
-                        transform: scale(1.2) !important;
+                        transform: scale(1.3) rotate(2deg) !important;
                         color: #ffff00 !important;
-                        text-shadow: 
-                            2px 2px 4px rgba(0,0,0,0.8), 
-                            0 0 20px rgba(255,255,0,1),
-                            0 0 30px rgba(255,255,0,0.8) !important;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,0,1), 0 0 30px rgba(255,255,0,0.8), 0 0 40px ${newColor} !important;
                     }
                     100% {
-                        transform: scale(1) !important;
+                        transform: scale(1) rotate(0deg) !important;
                         color: ${newColor} !important;
-                        text-shadow: 
-                            2px 2px 4px rgba(0,0,0,0.8), 
-                            0 0 15px ${newColor},
-                            0 0 25px ${newColor} !important;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 15px ${newColor}, 0 0 25px ${newColor} !important;
                     }
                 }
             `;
             document.head.appendChild(style);
+            
+            car.style.transition = 'filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.35)})`;
+            
+            car.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                car.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        function createThemeChangeEffect(newColor) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: radial-gradient(circle at center, ${rgbaString(newColor, 0.15)} 0%, transparent 70%);
+                pointer-events: none;
+                z-index: 25;
+                animation: themeWave 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                transform: scale(0.1);
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                const angle = (i / 12) * Math.PI * 2;
+                const distance = 150 + Math.random() * 100;
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                particle.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    width: 8px;
+                    height: 8px;
+                    background: ${newColor};
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 26;
+                    box-shadow: 0 0 15px ${newColor};
+                    animation: themeBurst 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    transform: translate(-50%, -50%);
+                `;
+                
+                particle.style.setProperty('--dx', x + 'px');
+                particle.style.setProperty('--dy', y + 'px');
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1000);
+            }
+            
+            setTimeout(() => overlay.remove(), 1200);
         }
 
         function updateHearts() {
@@ -1141,32 +1333,38 @@
                 return;
             }
             const distance = gameState.targetPosition - gameState.currentPosition;
-            const acceleration = distance * 0.15;
-            gameState.velocity = (gameState.velocity + acceleration) * 0.85;
+            const acceleration = distance * 0.08;
+            gameState.velocity = (gameState.velocity + acceleration) * 0.92;
             gameState.currentPosition += gameState.velocity;
 
-            if (Math.abs(distance) < 2 && Math.abs(gameState.velocity) < 0.5) {
+            if (Math.abs(distance) < 1.5 && Math.abs(gameState.velocity) < 0.3) {
                 gameState.currentPosition = gameState.targetPosition;
                 gameState.currentLane = gameState.targetLane;
                 gameState.velocity = 0;
                 gameState.isTransitioning = false;
 
                 car.style.transform = 'rotate(0deg)';
-                car.style.filter = 'drop-shadow(0 0 15px rgba(255, 255, 0, 0.3))';
+                car.style.transition = 'filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
             } else {
-                const maxRotation = 8;
-                const rotation = Math.max(-maxRotation, Math.min(maxRotation, gameState.velocity * 0.8));
+                const maxRotation = 2;
+                const rotation = Math.max(-maxRotation, Math.min(maxRotation, gameState.velocity * 0.2));
 
                 const glowIntensity = Math.abs(gameState.velocity) * 0.1 + 0.3;
                 car.style.transform = `rotate(${rotation}deg)`;
-                car.style.filter = `drop-shadow(0 0 ${15 + Math.abs(rotation) * 2}px rgba(255, 255, 0, ${glowIntensity}))`;
+                car.style.transition = 'filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                car.style.filter = `drop-shadow(0 0 ${15 + Math.abs(rotation) * 2}px ${rgbaString(gameState.themeColor, glowIntensity)})`;
             }
 
             car.style.left = gameState.currentPosition - 30 + 'px';
         }
 
-        function spawnParticle() {
-            if (Math.random() < gameState.spawnRate) {
+        function spawnParticlesFrame() {
+            if (gameState.particles.length >= gameState.particleCap) return;
+            const attempts = Math.max(1, gameState.spawnAttempts | 0);
+            for (let i = 0; i < attempts; i++) {
+                if (gameState.particles.length >= gameState.particleCap) break;
+                if (Math.random() >= gameState.spawnRate) continue;
                 const particle = document.createElement('div');
                 particle.className = 'particle';
                 
@@ -1201,8 +1399,9 @@
                 const finalSize = sizeVariation * typeModifier;
                 
                 particle.style.left = (laneCenter - 20) + 'px';
-                particle.style.top = '200px';
-                particle.style.transform = `scale(${finalSize})`;
+                const spawnY = -80 - Math.random() * 120;
+                particle.style.setProperty('--py', spawnY + 'px');
+                particle.style.setProperty('--scale', finalSize);
                 particle.style.animationDuration = `${rotationSpeed}s, 2s`;
                 
                 const shapeVariations = [
@@ -1223,7 +1422,7 @@
                 gameState.particles.push({
                     element: particle,
                     lane: lane,
-                    y: 200,
+                    y: spawnY,
                     size: finalSize,
                     type: asteroidType
                 });
@@ -1233,7 +1432,7 @@
         function updateParticles() {
             gameState.particles = gameState.particles.filter(particle => {
                 particle.y += gameState.particleSpeed;
-                particle.element.style.top = particle.y + 'px';
+                particle.element.style.setProperty('--py', particle.y + 'px');
 
                 const carCenterX = gameState.currentPosition;
                 const particleCenterX = lanePositions[particle.lane];
@@ -1248,7 +1447,7 @@
                     
                     car.style.filter = 'brightness(50%) sepia(100%) hue-rotate(0deg)';
                     setTimeout(() => {
-                        car.style.filter = 'drop-shadow(0 0 15px rgba(255, 255, 0, 0.3))';
+                        car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
                     }, 300);
 
                     if (gameState.lives <= 0) {
@@ -1258,7 +1457,9 @@
                 }
 
                 if (particle.y > window.innerHeight) {
-                    particle.element.remove();
+                    const el = particle.element;
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 140);
                     return false;
                 }
 
@@ -1272,7 +1473,7 @@
             gameOverElement.style.display = 'block';
         }
 
-        function restartGame() {
+    function restartGame() {
             gameState = {
                 currentLane: 1,
                 targetLane: 1,
@@ -1288,20 +1489,19 @@
                 gameSpeed: 1,
                 isTransitioning: false,
                 lastTurnTime: 0,
-                lastScoreTime: Date.now()
+                lastScoreTime: Date.now(),
+                themeColor: gameState.themeColor || '#ffff00'
             };
 
             document.querySelectorAll('.particle').forEach(particle => particle.remove());
 
             scoreElement.textContent = '0';
             updateHearts();
-            livesElement.textContent = '3';
             gameOverElement.style.display = 'none';
 
             updateCarPosition();
-            car.style.filter = 'drop-shadow(0 0 15px rgba(255, 255, 0, 0.3))';
+            car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
 
-            const road = document.querySelector('.road');
             road.style.animationDuration = '15s';
 
             inputCooldown = false;
@@ -1309,14 +1509,75 @@
             if (gameState.gameRunning) {
                 updateCarPosition();
                 updateScore();
-                spawnParticle();
+                spawnParticlesFrame();
                 updateParticles();
             }
             requestAnimationFrame(gameLoop);
         }
 
+        function hexToRgb(hex) {
+            const h = hex.replace('#','');
+            const bigint = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return { r, g, b };
+        }
+        function rgbaString(hex, a) {
+            const {r,g,b} = hexToRgb(hex);
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        function shadeColor(hex, percent) {
+            const {r,g,b} = hexToRgb(hex);
+            const t = percent < 0 ? 0 : 255;
+            const p = Math.abs(percent) / 100;
+            const R = Math.round((t - r) * p) + r;
+            const G = Math.round((t - g) * p) + g;
+            const B = Math.round((t - b) * p) + b;
+            const toHex = (n) => n.toString(16).padStart(2,'0');
+            return `#${toHex(R)}${toHex(G)}${toHex(B)}`;
+        }
+
         updateCarPosition();
         updateHearts();
+        
+        function recomputeLanes() {
+            lanePositions[0] = window.innerWidth * 0.2;
+            lanePositions[1] = window.innerWidth * 0.4;
+            lanePositions[2] = window.innerWidth * 0.6;
+            lanePositions[3] = window.innerWidth * 0.8;
+            gameState.targetPosition = lanePositions[gameState.targetLane];
+            if (!gameState.isTransitioning) {
+                gameState.currentPosition = lanePositions[gameState.currentLane];
+                car.style.left = gameState.currentPosition - 30 + 'px';
+            }
+            gameState.particles.forEach(p => {
+                const laneCenter = lanePositions[p.lane];
+                p.element.style.left = (laneCenter - 20) + 'px';
+            });
+            applySpawnSettings();
+        }
+        window.addEventListener('resize', recomputeLanes);
+
+        function computeSpawnSettings() {
+            const area = window.innerWidth * window.innerHeight;
+            const baseline = 1280 * 720;
+            const scale = Math.sqrt(area / baseline);
+            const capBase = 60;
+            const attempts = Math.max(1, Math.round(0.5 + scale));
+            const cap = Math.max(30, Math.min(140, Math.round(capBase * (0.6 + 0.8 * scale))));
+            const scaledRate = Math.min(0.08, Math.max(0.006, gameState.baseSpawnRate * (0.6 + 0.7 * scale)));
+            return { spawnRate: scaledRate, particleCap: cap, spawnAttempts: attempts };
+        }
+
+        function applySpawnSettings() {
+            const { spawnRate, particleCap, spawnAttempts } = computeSpawnSettings();
+            gameState.spawnRate = spawnRate;
+            gameState.particleCap = particleCap;
+            gameState.spawnAttempts = spawnAttempts;
+        }
+
+        applySpawnSettings();
         
         gameLoop();
     </script>
