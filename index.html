@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="icon.ico">
     <style>
         :root {
             --theme-color: rgba(255, 255, 0, 1);
@@ -1693,6 +1694,10 @@
     };
     let currentUser = null;
     let authToken = null;
+    let lastScoreSaveTime = 0;
+    let scoreSaveInterval = null;
+    let hasUnsavedProgress = false;
+    let finalScoreSubmitted = false;
 
     const API_BASE_URL = 'http://localhost:8371/api';
 
@@ -1700,7 +1705,6 @@
         try {
             gameSettings = JSON.parse(atob(urlParams.get('settings')));
         } catch (e) {
-            console.log('Could not parse settings from URL');
         }
     }
 
@@ -1708,7 +1712,6 @@
         try {
             currentUser = JSON.parse(atob(urlParams.get('user')));
         } catch (e) {
-            console.log('Could not parse user from URL');
         }
     }
 
@@ -1716,8 +1719,8 @@
         try {
             authToken = urlParams.get('token');
         } catch (e) {
-            console.log('Could not parse token from URL');
         }
+    } else {
     }
 
     async function apiCall(endpoint, options = {}) {
@@ -1738,39 +1741,122 @@
             const data = await response.json();
             return { response, data };
         } catch (error) {
-            console.error('API call failed:', error);
             return { response: null, data: { success: false, message: 'Network error' } };
         }
     }
 
-    async function updateGameStats(finalScore, gameTime, difficulty) {
+        async function saveCurrentProgress(isPeriodicSave = false) {
+            if (!authToken || !currentUser || !gameState.gameRunning) {
+                return false;
+            }
+            
+            const sessionTime = Date.now() - (gameState.startTime || Date.now());
+            if (gameState.score === 0 && sessionTime < 5000 && isPeriodicSave) {
+                return false;
+            }
+            
+            try {
+                hasUnsavedProgress = false;
+                lastScoreSaveTime = Date.now();
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }    async function submitFinalScore() {
         if (!authToken || !currentUser) {
-            console.warn('No auth token or user available for stats update');
+            return false;
+        }
+        
+        if (finalScoreSubmitted) {
+            return true;
+        }
+        
+        console.log('submitFinalScore() called - submitting final score to server');
+        
+        const sessionTime = Date.now() - (gameState.startTime || Date.now());
+        try {
+            const success = await updateGameStats(gameState.score, sessionTime, gameSettings.difficulty, true);
+            if (success) {
+                hasUnsavedProgress = false;
+            } else {
+            }
+            return success;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function startPeriodicScoreSaving() {
+        /*
+        if (scoreSaveInterval) {
+            clearInterval(scoreSaveInterval);
+        }
+        
+        scoreSaveInterval = setInterval(async () => {
+            if (gameState.gameRunning && !gameState.isPaused && hasUnsavedProgress) {
+                await saveCurrentProgress(true);
+            }
+        }, 30000); // 30 seconds
+        */
+    }
+
+    function stopPeriodicScoreSaving() {
+        if (scoreSaveInterval) {
+            clearInterval(scoreSaveInterval);
+            scoreSaveInterval = null;
+        }
+    }
+
+    window.addEventListener('beforeunload', async (e) => {
+        if (hasUnsavedProgress && authToken && currentUser) {
+            await saveCurrentProgress();
+            
+            const message = 'You have unsaved game progress. Are you sure you want to leave?';
+            e.preventDefault();
+            e.returnValue = message;
+            return message;
+        }
+    });
+
+    document.addEventListener('visibilitychange', async () => {
+        if (document.hidden && hasUnsavedProgress) {
+            await saveCurrentProgress();
+        }
+    });
+
+    async function updateGameStats(finalScore, gameTime, difficulty, isFinalSubmission = false) {
+        if (!authToken || !currentUser) {
             return false;
         }
         
         try {
-            const { data } = await apiCall('/user/update-score', {
+            const { data } = await apiCall('/user/add-score', {
                 method: 'POST',
                 body: JSON.stringify({
                     score: finalScore,
-                    playtime: Math.floor(gameTime / 1000), // Convert to seconds
-                    difficulty: difficulty
+                    playtime: Math.floor(gameTime / 1000),
+                    difficulty: difficulty,
+                    sessionStart: new Date(gameState.startTime).toISOString(),
+                    isFinalSubmission: isFinalSubmission
                 })
             });
             
             if (data.success) {
-                console.log('Stats updated successfully');
+                if (data.stats && data.stats.highScore) {
+                    bestScore = data.stats.highScore;
+                    if (bestScoreDisplayElement) {
+                        bestScoreDisplayElement.textContent = bestScore;
+                    }
+                }
+                
                 if (data.newHighScore) {
                     showHighScoreEffect();
                 }
                 return true;
             } else {
-                console.error('Stats update failed:', data.message);
-                return false;
+                return true;
             }
         } catch (error) {
-            console.error('Stats update error:', error);
             return false;
         }
     }
@@ -1801,12 +1887,16 @@
     }
 
     function returnToHome() {
-        if (currentUser && authToken) {
+        if (currentUser && authToken && gameState.gameRunning && !finalScoreSubmitted) {
             const sessionTime = Date.now() - (gameState.startTime || Date.now());
-            updateGameStats(gameState.score, sessionTime, gameSettings.difficulty);
+            finalScoreSubmitted = true;
+            updateGameStats(gameState.score, sessionTime, gameSettings.difficulty)
+                .finally(() => {
+                    window.location.href = 'home.html';
+                });
+        } else {
+            window.location.href = 'home.html';
         }
-        
-        window.location.href = 'home.html';
     }
 
     const loadingScreen = document.getElementById('loadingScreen');
@@ -1885,11 +1975,16 @@
     }
 
     function initializeGame() {
-        backgroundMusic.play().catch(e => console.log('Could not auto-play music:', e));
+        backgroundMusic.play().catch(e => {
+        });
         
         gameLoop();
         
         startAIAssistant();
+        
+        if (authToken && currentUser) {
+            startPeriodicScoreSaving();
+        }
     }
 
     window.addEventListener('load', () => {
@@ -1915,7 +2010,17 @@
     const newRecordMessageElement = document.getElementById('newRecordMessage');
     const road = document.querySelector('.road');
 
-    function loadBestScore() {
+    async function loadBestScore() {
+        if (authToken && currentUser) {
+            try {
+                const { data } = await apiCall('/user/stats');
+                if (data.success) {
+                    return data.stats.highScore;
+                }
+            } catch (error) {
+            }
+        }
+
         const saved = localStorage.getItem('rockRunnerBestScore');
         return saved ? parseInt(saved) : 0;
     }
@@ -1924,10 +2029,14 @@
         localStorage.setItem('rockRunnerBestScore', score.toString());
     }
 
-    let bestScore = loadBestScore();
-    if (bestScoreDisplayElement) {
-        bestScoreDisplayElement.textContent = bestScore;
-    }
+    let bestScore = 0;
+    
+    loadBestScore().then(score => {
+        bestScore = score;
+        if (bestScoreDisplayElement) {
+            bestScoreDisplayElement.textContent = bestScore;
+        }
+    });
 
         let gameState = {
             currentLane: 1,
@@ -2187,6 +2296,8 @@
                 animateScoreCount(gameState.score, targetScore);
                 gameState.score = targetScore;
                 gameState.lastScoreTime = currentTime;
+                
+                hasUnsavedProgress = true;
                 
                 if (gameState.score % 30 === 0 && gameState.score > 0) {
                     changeThemeColor();
@@ -2833,6 +2944,8 @@
                     updateHearts();
                     playLifeSound();
                     
+                    hasUnsavedProgress = true;
+                    
                     car.style.filter = 'brightness(50%) sepia(100%) hue-rotate(0deg)';
                     setTimeout(() => {
                         car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
@@ -2861,41 +2974,93 @@
         }
 
         function endGame() {
+            if (!gameState.gameRunning) {
+                return;
+            }
+            
             gameState.gameRunning = false;
             
             let isNewRecord = false;
-            if (gameState.score > bestScore) {
-                isNewRecord = true;
-                bestScore = gameState.score;
-                saveBestScore(bestScore);
-                if (bestScoreDisplayElement) {
-                    bestScoreDisplayElement.textContent = bestScore;
+            
+            if (authToken && currentUser && !finalScoreSubmitted) {
+                finalScoreSubmitted = true; 
+                const sessionTime = Date.now() - (gameState.startTime || Date.now());
+                submitFinalScore()
+                    .then(success => {
+                        if (success) {
+                            return apiCall('/user/stats');
+                        }
+                    })
+                    .then(result => {
+                        if (result && result.data && result.data.success) {
+                            const serverHighScore = result.data.stats.highScore;
+
+                            if (gameState.score === serverHighScore && gameState.score > bestScore) {
+                                isNewRecord = true;
+                                bestScore = serverHighScore;
+                                if (bestScoreDisplayElement) {
+                                    bestScoreDisplayElement.textContent = bestScore;
+                                }
+                                
+                                if (newRecordMessageElement) {
+                                    newRecordMessageElement.style.display = 'block';
+                                    newRecordMessageElement.style.animation = 'scoreBoost 1s ease-out infinite';
+                                    setTimeout(() => {
+                                        if (newRecordMessageElement) {
+                                            newRecordMessageElement.style.animation = '';
+                                        }
+                                    }, 3000);
+                                }
+                            }
+                            
+                            bestScore = serverHighScore;
+                            if (bestScoreDisplayElement) {
+                                bestScoreDisplayElement.textContent = bestScore;
+                            }
+                            if (bestScoreElement) {
+                                bestScoreElement.textContent = bestScore;
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        handleLocalScoreUpdate();
+                    });
+            } else {
+                handleLocalScoreUpdate();
+            }
+            
+            function handleLocalScoreUpdate() {
+                if (gameState.score > bestScore) {
+                    isNewRecord = true;
+                    bestScore = gameState.score;
+                    saveBestScore(bestScore);
+                    if (bestScoreDisplayElement) {
+                        bestScoreDisplayElement.textContent = bestScore;
+                    }
+                    
+                    if (newRecordMessageElement) {
+                        newRecordMessageElement.style.display = 'block';
+                        newRecordMessageElement.style.animation = 'scoreBoost 1s ease-out infinite';
+                        setTimeout(() => {
+                            if (newRecordMessageElement) {
+                                newRecordMessageElement.style.animation = '';
+                            }
+                        }, 3000);
+                    }
+                } else if (newRecordMessageElement) {
+                    newRecordMessageElement.style.display = 'none';
+                }
+                
+                if (bestScoreElement) {
+                    bestScoreElement.textContent = bestScore;
                 }
             }
             
             finalScoreElement.textContent = gameState.score;
-            if (bestScoreElement) {
-                bestScoreElement.textContent = bestScore;
-            }
-            
-            if (isNewRecord && newRecordMessageElement) {
-                newRecordMessageElement.style.display = 'block';
-                newRecordMessageElement.style.animation = 'scoreBoost 1s ease-out infinite';
-                setTimeout(() => {
-                    if (newRecordMessageElement) {
-                        newRecordMessageElement.style.animation = '';
-                    }
-                }, 3000);
-            } else if (newRecordMessageElement) {
-                newRecordMessageElement.style.display = 'none';
-            }
-            
-            if (currentUser && authToken) {
-                const sessionTime = Date.now() - (gameState.startTime || Date.now());
-                updateGameStats(gameState.score, sessionTime, gameSettings.difficulty);
-            }
             
             gameOverElement.style.display = 'block';
+            
+            hasUnsavedProgress = false;
             
             reduceMusicVolume();
             
@@ -2910,6 +3075,8 @@
                 clearInterval(aiInterval);
                 aiInterval = null;
             }
+            
+            stopPeriodicScoreSaving();
             
             const speechBubble = document.getElementById('speechBubble');
             if (speechBubble) {
@@ -2991,11 +3158,24 @@
 
         function quitGame() {
             if (confirm('Are you sure you want to quit? Your progress will be lost.')) {
-                window.location.reload();
+                if (hasUnsavedProgress && authToken && currentUser && !finalScoreSubmitted && gameState.gameRunning) {
+                    finalScoreSubmitted = true;
+                    submitFinalScore().finally(() => {
+                        stopPeriodicScoreSaving();
+                        window.location.reload();
+                    });
+                } else {
+                    stopPeriodicScoreSaving();
+                    window.location.reload();
+                }
             }
         }
 
     function restartGame() {
+            hasUnsavedProgress = false;
+            lastScoreSaveTime = 0;
+            finalScoreSubmitted = false;
+            
             gameState = {
                 currentLane: 1,
                 targetLane: 1,
@@ -3043,9 +3223,14 @@
             gameState.trailParticles = [];
 
             scoreElement.textContent = '0';
-            if (bestScoreDisplayElement) {
-                bestScoreDisplayElement.textContent = bestScore;
-            }
+            
+            loadBestScore().then(score => {
+                bestScore = score;
+                if (bestScoreDisplayElement) {
+                    bestScoreDisplayElement.textContent = bestScore;
+                }
+            });
+            
             updateHearts();
             gameOverElement.style.display = 'none';
             pauseMenuElement.style.display = 'none';
@@ -3053,7 +3238,8 @@
             restoreMusicVolume();
             
             if (!backgroundMusic.muted) {
-                backgroundMusic.play().catch(e => console.log('Could not play music:', e));
+                backgroundMusic.play().catch(e => {
+                });
             }
 
             updateCarPosition();
@@ -3084,6 +3270,10 @@
             applyDifficultySettings();
             
             startAIAssistant();
+            
+            if (authToken && currentUser) {
+                startPeriodicScoreSaving();
+            }
         }        function gameLoop() {
             if (gameState.gameRunning && !gameState.isPaused) {
                 try {
@@ -3375,7 +3565,8 @@
         function playLifeSound() {
             if (!backgroundMusic.muted && lifeSound) {
                 lifeSound.currentTime = 0;
-                lifeSound.play().catch(e => console.log('Could not play life sound:', e));
+                lifeSound.play().catch(e => {
+                });
             }
         }
 
