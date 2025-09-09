@@ -83,7 +83,7 @@ def verify_password(password, stored_hash):
         return False
 
 def generate_jwt_token(user_id, email, username):
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     payload = {
         'user_id': user_id,
         'email': email,
