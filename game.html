@@ -1762,29 +1762,29 @@
             } catch (error) {
                 return false;
             }
-        }    async function submitFinalScore() {
-        if (!authToken || !currentUser) {
-            return false;
         }
-        
-        if (finalScoreSubmitted) {
-            return true;
-        }
-        
-        console.log('submitFinalScore() called - submitting final score to server');
-        
-        const sessionTime = Date.now() - (gameState.startTime || Date.now());
-        try {
-            const success = await updateGameStats(gameState.score, sessionTime, gameSettings.difficulty, true);
-            if (success) {
-                hasUnsavedProgress = false;
-            } else {
+        async function submitFinalScore() {
+            if (!authToken || !currentUser) {
+                return false;
             }
-            return success;
-        } catch (error) {
-            return false;
+            
+            if (finalScoreSubmitted) {
+                controlMessage.textContent = 'Final score already submitted.';
+                return true;
+            }
+            
+            const sessionTime = Date.now() - (gameState.startTime || Date.now());
+            try {
+                const success = await updateGameStats(gameState.score, sessionTime, gameSettings.difficulty, true);
+                if (success) {
+                    hasUnsavedProgress = false;
+                } else {
+                }
+                return success;
+            } catch (error) {
+                return false;
+            }
         }
-    }
 
     function startPeriodicScoreSaving() {
         /*
@@ -2982,12 +2982,12 @@
             
             let isNewRecord = false;
             
-            if (authToken && currentUser && !finalScoreSubmitted) {
-                finalScoreSubmitted = true; 
+            if (authToken && currentUser && !finalScoreSubmitted) { 
                 const sessionTime = Date.now() - (gameState.startTime || Date.now());
                 submitFinalScore()
                     .then(success => {
                         if (success) {
+                            finalScoreSubmitted = true;
                             return apiCall('/user/stats');
                         }
                     })
