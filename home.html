@@ -198,13 +198,6 @@
             color: rgba(255, 215, 0, 0.5);
         }
 
-        .otp-input {
-            text-align: center;
-            font-size: 24px;
-            letter-spacing: 8px;
-            font-weight: 700;
-        }
-
         .btn {
             width: 100%;
             padding: 16px 24px;
@@ -522,36 +515,48 @@
 
         <main class="main-panel">
             <div class="auth-container" id="authContainer">
-                <div class="auth-step active" id="emailStep">
+                <div class="auth-step active" id="loginStep">
                     <h2 class="panel-title">Captain Authentication</h2>
                     <div class="input-group">
-                        <label class="input-label" for="email">Email Address</label>
-                        <input type="email" id="email" class="input-field" placeholder="captain@starfleet.com" required>
+                        <label class="input-label" for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" class="input-field" placeholder="captain@starfleet.com" required>
                     </div>
                     <div class="input-group">
-                        <label class="input-label" for="username">Captain Name</label>
-                        <input type="text" id="username" class="input-field" placeholder="Enter your callsign" maxlength="20" required>
+                        <label class="input-label" for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="input-field" placeholder="Enter your password" required>
                     </div>
-                    <button class="btn btn-primary" id="requestOtpBtn" onclick="requestOTP()">
-                        Send Verification Code
+                    <button class="btn btn-primary" id="loginBtn" onclick="login()">
+                        Access Command Center
                     </button>
-                    <div class="auth-message" id="authMessage"></div>
+                    <div class="btn-group" style="margin-top: 15px;">
+                        <button class="btn btn-secondary" onclick="showRegisterStep()">New Captain? Register Here</button>
+                    </div>
+                    <div class="auth-message" id="loginMessage"></div>
                 </div>
 
-                <div class="auth-step" id="otpStep">
-                    <h2 class="panel-title">Verification Required</h2>
-                    <p style="text-align: center; margin-bottom: 25px; color: #cccccc;">
-                        A secure verification code has been transmitted to your communication device.
-                    </p>
+                <div class="auth-step" id="registerStep">
+                    <h2 class="panel-title">New Captain Registration</h2>
                     <div class="input-group">
-                        <label class="input-label" for="otpCode">Authorization Code</label>
-                        <input type="text" id="otpCode" class="input-field otp-input" placeholder="000000" maxlength="6" required>
+                        <label class="input-label" for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" class="input-field" placeholder="captain@starfleet.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="registerUsername">Captain Name</label>
+                        <input type="text" id="registerUsername" class="input-field" placeholder="Enter your callsign" maxlength="20" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" class="input-field" placeholder="Create a secure password" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm your password" required>
                     </div>
                     <div class="btn-group">
-                        <button class="btn btn-secondary" onclick="showEmailStep()">← Back</button>
-                        <button class="btn btn-primary" onclick="verifyOTP()">Verify & Login</button>
+                        <button class="btn btn-secondary" onclick="showLoginStep()">← Back to Login</button>
+                        <button class="btn btn-primary" onclick="register()">Create Account</button>
                     </div>
-                    <div class="auth-message" id="otpMessage"></div>
+                    <div class="auth-message" id="registerMessage"></div>
                 </div>
             </div>
 
@@ -588,7 +593,6 @@
                     <div class="quick-actions">
                         <button class="quick-btn" onclick="viewProfile()">👤 Profile</button>
                         <button class="quick-btn" onclick="viewLeaderboard()">🏆 Rankings</button>
-                        <button class="quick-btn" onclick="openSettings()">⚙️ Settings</button>
                         <button class="quick-btn" onclick="logout()">🚪 Logout</button>
                     </div>
                 </div>
@@ -665,20 +669,28 @@
             }
 
             setupEventListeners() {
-                document.getElementById('email').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.requestOTP();
+                document.getElementById('loginEmail').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.login();
                 });
                 
-                document.getElementById('username').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.requestOTP();
+                document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.login();
                 });
                 
-                document.getElementById('otpCode').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.verifyOTP();
+                document.getElementById('registerEmail').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.register();
                 });
-
-                document.getElementById('otpCode').addEventListener('input', (e) => {
-                    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                
+                document.getElementById('registerUsername').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.register();
+                });
+                
+                document.getElementById('registerPassword').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.register();
+                });
+                
+                document.getElementById('confirmPassword').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.register();
                 });
             }
 
@@ -707,7 +719,6 @@
                     
                     return { response, data };
                 } catch (error) {
-                    console.error('API call failed:', error);
                     throw error;
                 }
             }
@@ -742,84 +753,43 @@
                         await this.loadUserRank();
                         
                     } catch (e) {
-                        console.error('Error loading saved auth:', e);
                         this.clearAuth();
                     }
                 }
             }
 
-            async requestOTP() {
-                const email = document.getElementById('email').value.trim();
-                const username = document.getElementById('username').value.trim();
+            async login() {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
                 
-                if (!email || !username) {
-                    this.showAuthMessage('Please enter both email and username', 'error');
+                if (!email || !password) {
+                    this.showLoginMessage('Please enter both email and password', 'error');
                     return;
                 }
 
                 if (!this.validateEmail(email)) {
-                    this.showAuthMessage('Please enter a valid email address', 'error');
+                    this.showLoginMessage('Please enter a valid email address', 'error');
                     return;
                 }
                 
-                const btn = document.getElementById('requestOtpBtn');
+                const btn = document.getElementById('loginBtn');
                 btn.disabled = true;
-                btn.textContent = 'Sending...';
+                btn.textContent = 'Authenticating...';
                 
                 try {
-                    this.showAuthMessage('Transmitting verification code to your device...', 'info');
+                    this.showLoginMessage('Connecting to fleet command...', 'info');
                     
-                    const response = await fetch(`${API_BASE_URL}/request-otp`, {
+                    const response = await fetch(`${API_BASE_URL}/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, username })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        this.showAuthMessage('Verification code transmitted successfully!', 'success');
-                        this.showOTPStep();
-                    } else {
-                        this.showAuthMessage(data.message, 'error');
-                    }
-                } catch (error) {
-                    this.showAuthMessage('Communication error. Please try again.', 'error');
-                    console.error('OTP request error:', error);
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Send Verification Code';
-                }
-            }
-
-            async verifyOTP() {
-                const email = document.getElementById('email').value.trim();
-                const username = document.getElementById('username').value.trim();
-                const otp = document.getElementById('otpCode').value.trim();
-                
-                if (!otp || otp.length !== 6) {
-                    this.showOTPMessage('Please enter the complete 6-digit authorization code', 'error');
-                    return;
-                }
-                
-                const verifyBtn = document.querySelector('#otpStep .btn-primary');
-                verifyBtn.disabled = true;
-                verifyBtn.textContent = 'Verifying...';
-                
-                try {
-                    this.showOTPMessage('Authenticating with fleet command...', 'info');
-                    
-                    const response = await fetch(`${API_BASE_URL}/verify-otp`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, username, otp })
+                        body: JSON.stringify({ email, password })
                     });
                     
                     const data = await response.json();
                     
                     if (data.success) {
                         this.saveAuth(data.user, data.token);
-                        this.showOTPMessage('Authentication successful! Welcome aboard, Captain.', 'success');
+                        this.showLoginMessage('Authentication successful! Welcome aboard, Captain.', 'success');
                         
                         await this.refreshUserStats();
                         await this.loadUserRank();
@@ -828,14 +798,75 @@
                             this.hideAuthMessage();
                         }, 2000);
                     } else {
-                        this.showOTPMessage(data.message, 'error');
+                        this.showLoginMessage(data.message, 'error');
                     }
                 } catch (error) {
-                    this.showOTPMessage('Communication error. Please try again.', 'error');
-                    console.error('OTP verification error:', error);
+                    this.showLoginMessage('Communication error. Please try again.', 'error');
                 } finally {
-                    verifyBtn.disabled = false;
-                    verifyBtn.textContent = 'Verify & Login';
+                    btn.disabled = false;
+                    btn.textContent = 'Access Command Center';
+                }
+            }
+
+            async register() {
+                const email = document.getElementById('registerEmail').value.trim();
+                const username = document.getElementById('registerUsername').value.trim();
+                const password = document.getElementById('registerPassword').value.trim();
+                const confirmPassword = document.getElementById('confirmPassword').value.trim();
+                
+                if (!email || !username || !password || !confirmPassword) {
+                    this.showRegisterMessage('Please fill in all fields', 'error');
+                    return;
+                }
+
+                if (!this.validateEmail(email)) {
+                    this.showRegisterMessage('Please enter a valid email address', 'error');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    this.showRegisterMessage('Passwords do not match', 'error');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    this.showRegisterMessage('Password must be at least 6 characters long', 'error');
+                    return;
+                }
+                
+                const registerBtn = document.querySelector('#registerStep .btn-primary');
+                registerBtn.disabled = true;
+                registerBtn.textContent = 'Creating Account...';
+                
+                try {
+                    this.showRegisterMessage('Registering with fleet command...', 'info');
+                    
+                    const response = await fetch(`${API_BASE_URL}/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, username, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.saveAuth(data.user, data.token);
+                        this.showRegisterMessage('Registration successful! Welcome to the fleet, Captain.', 'success');
+                        
+                        await this.refreshUserStats();
+                        await this.loadUserRank();
+                        
+                        setTimeout(() => {
+                            this.hideAuthMessage();
+                        }, 2000);
+                    } else {
+                        this.showRegisterMessage(data.message, 'error');
+                    }
+                } catch (error) {
+                    this.showRegisterMessage('Communication error. Please try again.', 'error');
+                } finally {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Create Account';
                 }
             }
 
@@ -843,38 +874,50 @@
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
             }
 
-            showEmailStep() {
-                document.getElementById('emailStep').classList.add('active');
-                document.getElementById('otpStep').classList.remove('active');
-                document.getElementById('otpCode').value = '';
+            showLoginStep() {
+                document.getElementById('loginStep').classList.add('active');
+                document.getElementById('registerStep').classList.remove('active');
+                this.clearAuthFields();
                 this.hideAuthMessage();
             }
 
-            showOTPStep() {
-                document.getElementById('emailStep').classList.remove('active');
-                document.getElementById('otpStep').classList.add('active');
+            showRegisterStep() {
+                document.getElementById('loginStep').classList.remove('active');
+                document.getElementById('registerStep').classList.add('active');
+                this.clearAuthFields();
+                this.hideAuthMessage();
                 setTimeout(() => {
-                    document.getElementById('otpCode').focus();
+                    document.getElementById('registerEmail').focus();
                 }, 300);
             }
+            
+            clearAuthFields() {
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+                
+                document.getElementById('registerEmail').value = '';
+                document.getElementById('registerUsername').value = '';
+                document.getElementById('registerPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }
 
-            showAuthMessage(message, type) {
-                const messageDiv = document.getElementById('authMessage');
+            showLoginMessage(message, type) {
+                const messageDiv = document.getElementById('loginMessage');
                 messageDiv.textContent = message;
                 messageDiv.className = `auth-message ${type}`;
                 messageDiv.style.display = 'block';
             }
 
-            showOTPMessage(message, type) {
-                const messageDiv = document.getElementById('otpMessage');
+            showRegisterMessage(message, type) {
+                const messageDiv = document.getElementById('registerMessage');
                 messageDiv.textContent = message;
                 messageDiv.className = `auth-message ${type}`;
                 messageDiv.style.display = 'block';
             }
 
             hideAuthMessage() {
-                document.getElementById('authMessage').style.display = 'none';
-                document.getElementById('otpMessage').style.display = 'none';
+                document.getElementById('loginMessage').style.display = 'none';
+                document.getElementById('registerMessage').style.display = 'none';
             }
 
             updateDisplay() {
@@ -892,7 +935,7 @@
                 } else {
                     authContainer.style.display = 'block';
                     userDashboard.classList.remove('active');
-                    this.showEmailStep();
+                    this.showLoginStep();
                 }
             }
 
@@ -920,7 +963,6 @@
                         }
                     }
                 } catch (error) {
-                    console.error('Stats refresh error:', error);
                 }
             }
 
@@ -935,7 +977,6 @@
                         rankDisplay.textContent = `Fleet Rank: #${data.rank} • Top ${Math.round(100 - data.percentile)}% of pilots`;
                     }
                 } catch (error) {
-                    console.error('Rank loading error:', error);
                 }
             }
 
@@ -955,7 +996,6 @@
                         this.showNotification('Unable to access fleet rankings', 'error');
                     }
                 } catch (error) {
-                    console.error('Leaderboard loading error:', error);
                     this.showNotification('Communication error with fleet command', 'error');
                 }
             }
@@ -988,7 +1028,6 @@
                         this.showNotification('Unable to access pilot profile', 'error');
                     }
                 } catch (error) {
-                    console.error('Profile loading error:', error);
                     this.showNotification('Profile access error', 'error');
                 }
             }
@@ -1107,9 +1146,10 @@
 
         const app = new RockRunnerApp();
 
-        function requestOTP() { app.requestOTP(); }
-        function verifyOTP() { app.verifyOTP(); }
-        function showEmailStep() { app.showEmailStep(); }
+        function login() { app.login(); }
+        function register() { app.register(); }
+        function showLoginStep() { app.showLoginStep(); }
+        function showRegisterStep() { app.showRegisterStep(); }
         function logout() { app.logout(); }
         function viewLeaderboard() { app.viewLeaderboard(); }
         function viewProfile() { app.viewProfile(); }

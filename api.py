@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
-import smtplib
 import secrets
 import hashlib
 import datetime
@@ -10,8 +9,6 @@ import os
 import re
 import jwt
 from functools import wraps
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 CORS(app)
@@ -19,11 +16,6 @@ CORS(app)
 JWT_SECRET = os.getenv('JWT_SECRET', 'rock-runner-secret-key-' + secrets.token_hex(16))
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
-
-SMTP_SERVER = "smtp.dreamhost.com"
-SMTP_PORT = 587
-EMAIL_ADDRESS = ""
-EMAIL_PASSWORD = ""
 
 DB_NAME = "game_users.db"
 
@@ -36,20 +28,10 @@ def init_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_login TIMESTAMP,
-            is_verified BOOLEAN DEFAULT FALSE
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS otp_codes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT NOT NULL,
-            code TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            expires_at TIMESTAMP NOT NULL,
-            used BOOLEAN DEFAULT FALSE
+            is_verified BOOLEAN DEFAULT TRUE
         )
     ''')
     
@@ -74,210 +56,26 @@ def validate_email_format(email):
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_pattern, email) is not None
 
-def send_otp_email(email, otp_code):
+def hash_password(password):
+    salt = secrets.token_hex(16)
+    password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+    return f"{salt}:{password_hash}"
+
+def verify_password(password, stored_hash):
     try:
-        msg = MIMEMultipart('alternative')
-        msg['From'] = EMAIL_ADDRESS
-        msg['To'] = email
-        msg['Subject'] = "🚀 Rock Runner - Your Space Access Code"
-        
-        html_body = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Rock Runner - Access Code</title>
-            <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-        </head>
-        <body style="
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #0f0f23 0%, #16213e 50%, #0f3460 100%);
-            font-family: 'Orbitron', monospace;
-            color: #ffd700;
-            min-height: 100vh;
-        ">
-            <div style="
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 40px 20px;
-            ">
-                <!-- Header -->
-                <div style="
-                    text-align: center;
-                    margin-bottom: 40px;
-                ">
-                    <h1 style="
-                        color: #ffd700;
-                        font-size: 2.5em;
-                        font-weight: 900;
-                        margin: 0;
-                        text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-                        letter-spacing: 3px;
-                    ">🚀 ROCK RUNNER</h1>
-                    <p style="
-                        color: #00ffff;
-                        font-size: 1.1em;
-                        margin: 10px 0 0 0;
-                        letter-spacing: 1px;
-                    ">SPACE ADVENTURE GAME</p>
-                </div>
-                
-                <!-- Main Content -->
-                <div style="
-                    background: rgba(26, 26, 46, 0.8);
-                    border: 2px solid #ffd700;
-                    border-radius: 15px;
-                    padding: 30px;
-                    text-align: center;
-                    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-                ">
-                    <h2 style="
-                        color: #ffd700;
-                        font-size: 1.8em;
-                        margin: 0 0 20px 0;
-                        font-weight: 700;
-                    ">🔐 SECURE ACCESS CODE</h2>
-                    
-                    <p style="
-                        color: #ffffff;
-                        font-size: 1.1em;
-                        line-height: 1.6;
-                        margin: 20px 0;
-                    ">Your space mission access code is ready, Commander!</p>
-                    
-                    <!-- OTP Code Box -->
-                    <div style="
-                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                        border: 3px solid #00ffff;
-                        border-radius: 12px;
-                        padding: 25px;
-                        margin: 30px 0;
-                        box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
-                    ">
-                        <p style="
-                            color: #00ffff;
-                            font-size: 0.9em;
-                            margin: 0 0 10px 0;
-                            letter-spacing: 1px;
-                        ">ACCESS CODE</p>
-                        <div style="
-                            color: #ffd700;
-                            font-size: 3em;
-                            font-weight: 900;
-                            letter-spacing: 8px;
-                            text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-                            margin: 0;
-                        ">{otp_code}</div>
-                    </div>
-                    
-                    <!-- Instructions -->
-                    <div style="
-                        background: rgba(255, 215, 0, 0.1);
-                        border-left: 4px solid #ffd700;
-                        padding: 20px;
-                        margin: 25px 0;
-                        text-align: left;
-                    ">
-                        <p style="
-                            color: #ffffff;
-                            margin: 0 0 10px 0;
-                            font-size: 1em;
-                            line-height: 1.5;
-                        "><strong style="color: #ffd700;">⏱️ Mission Time:</strong> This code expires in 10 minutes</p>
-                        <p style="
-                            color: #ffffff;
-                            margin: 0 0 10px 0;
-                            font-size: 1em;
-                            line-height: 1.5;
-                        "><strong style="color: #ffd700;">🎯 Mission Objective:</strong> Enter this code in your game login</p>
-                        <p style="
-                            color: #ffffff;
-                            margin: 0;
-                            font-size: 1em;
-                            line-height: 1.5;
-                        "><strong style="color: #ffd700;">🔒 Security Note:</strong> Use this code only once</p>
-                    </div>
-                    
-                    <p style="
-                        color: #888;
-                        font-size: 0.9em;
-                        margin: 25px 0 0 0;
-                        line-height: 1.4;
-                    ">If you didn't request this code, please ignore this transmission. Your account remains secure.</p>
-                </div>
-                
-                <!-- Footer -->
-                <div style="
-                    text-align: center;
-                    margin-top: 40px;
-                    padding-top: 20px;
-                    border-top: 1px solid rgba(255, 215, 0, 0.3);
-                ">
-                    <p style="
-                        color: #00ffff;
-                        font-size: 1.1em;
-                        margin: 0 0 10px 0;
-                        font-weight: 700;
-                    ">🌟 READY FOR ADVENTURE? 🌟</p>
-                    <p style="
-                        color: #888;
-                        font-size: 0.8em;
-                        margin: 0;
-                    ">Rock Runner Space Command Center<br>
-                    Automated Mission Control System</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        
-        text_body = f"""
-        ROCK RUNNER - Space Access Code
-        
-        Your mission access code: {otp_code}
-        
-        This code expires in 10 minutes.
-        Enter it in your game login to continue your space adventure!
-        
-        If you didn't request this code, please ignore this message.
-        
-        Happy gaming, Commander!
-        - Rock Runner Space Command
-        """
-        
-        part1 = MIMEText(text_body, 'plain')
-        part2 = MIMEText(html_body, 'html')
-        
-        msg.attach(part1)
-        msg.attach(part2)
-        
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        text = msg.as_string()
-        server.sendmail(EMAIL_ADDRESS, email, text)
-        server.quit()
-        
-        return True
-    except Exception as e:
-        print(f"Email sending failed: {e}")
+        salt, password_hash = stored_hash.split(':')
+        return hashlib.sha256((password + salt).encode()).hexdigest() == password_hash
+    except:
         return False
 
-def generate_otp():
-    return f"{secrets.randbelow(900000) + 100000}"
-
-def hash_code(code):
-    return hashlib.sha256(code.encode()).hexdigest()
-
 def generate_jwt_token(user_id, email, username):
+    now = datetime.datetime.utcnow()
     payload = {
         'user_id': user_id,
         'email': email,
         'username': username,
-        'iat': datetime.datetime.utcnow().timestamp(),
-        'exp': (datetime.datetime.utcnow() + datetime.timedelta(hours=JWT_EXPIRATION_HOURS)).timestamp()
+        'iat': now,
+        'exp': now + datetime.timedelta(hours=JWT_EXPIRATION_HOURS)
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -298,7 +96,7 @@ def jwt_required(f):
         
         if auth_header:
             try:
-                token = auth_header.split(" ")[1]  # Bearer <token>
+                token = auth_header.split(" ")[1]
             except IndexError:
                 return jsonify({'success': False, 'message': 'Invalid token format'}), 401
         
@@ -316,106 +114,107 @@ def jwt_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/api/request-otp', methods=['POST'])
-def request_otp():
+@app.route('/api/register', methods=['POST'])
+def register():
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()
         username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
         
-        if not email or not username:
-            return jsonify({'success': False, 'message': 'Email and username are required'}), 400
+        if not email or not username or not password:
+            return jsonify({'success': False, 'message': 'Email, username, and password are required'}), 400
         
         if not validate_email_format(email):
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
         
-        if not EMAIL_ADDRESS or not EMAIL_PASSWORD:
-            return jsonify({'success': False, 'message': 'Email service not configured'}), 500
+        if len(password) < 6:
+            return jsonify({'success': False, 'message': 'Password must be at least 6 characters long'}), 400
         
-        otp_code = generate_otp()
-        hashed_code = hash_code(otp_code)
-        
-        expires_at = (datetime.datetime.now() + datetime.timedelta(minutes=10)).isoformat()
+        if len(username) < 3:
+            return jsonify({'success': False, 'message': 'Username must be at least 3 characters long'}), 400
         
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         
+        cursor.execute('SELECT id FROM users WHERE email = ? OR username = ?', (email, username))
+        existing_user = cursor.fetchone()
+        
+        if existing_user:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Email or username already exists'}), 400
+        
+        password_hash = hash_password(password)
+        
         current_time = datetime.datetime.now().isoformat()
-        cursor.execute('DELETE FROM otp_codes WHERE email = ? AND expires_at < ?', 
-                      (email, current_time))
+        cursor.execute('''
+            INSERT INTO users (email, username, password_hash, last_login)
+            VALUES (?, ?, ?, ?)
+        ''', (email, username, password_hash, current_time))
+        
+        user_id = cursor.lastrowid
         
         cursor.execute('''
-            INSERT INTO otp_codes (email, code, expires_at)
-            VALUES (?, ?, ?)
-        ''', (email, hashed_code, expires_at))
+            INSERT INTO game_stats (user_id, difficulty_stats)
+            VALUES (?, ?)
+        ''', (user_id, json.dumps({'easy': 0, 'normal': 0, 'hard': 0})))
         
         conn.commit()
         conn.close()
         
-        if send_otp_email(email, otp_code):
-            return jsonify({
-                'success': True,
-                'message': 'OTP sent to your email. Check your inbox!'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'Failed to send email. Please try again.'
-            }), 500
-            
+        token = generate_jwt_token(user_id, email, username)
+        
+        user_data = {
+            'id': user_id,
+            'email': email,
+            'username': username,
+            'stats': {
+                'highScore': 0,
+                'totalGames': 0,
+                'totalPlaytime': 0,
+                'averageScore': 0,
+                'difficultyStats': {'easy': 0, 'normal': 0, 'hard': 0}
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'message': 'Registration successful! Welcome to Rock Runner!',
+            'token': token,
+            'user': user_data
+        })
+        
     except Exception as e:
-        print(f"Error requesting OTP: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
-@app.route('/api/verify-otp', methods=['POST'])
-def verify_otp():
+@app.route('/api/login', methods=['POST'])
+def login():
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()
-        username = data.get('username', '').strip()
-        otp_code = data.get('otp', '').strip()
+        password = data.get('password', '').strip()
         
-        if not email or not username or not otp_code:
-            return jsonify({'success': False, 'message': 'All fields are required'}), 400
-        
-        hashed_code = hash_code(otp_code)
+        if not email or not password:
+            return jsonify({'success': False, 'message': 'Email and password are required'}), 400
         
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         
-        current_time = datetime.datetime.now().isoformat()
-        cursor.execute('''
-            SELECT id FROM otp_codes 
-            WHERE email = ? AND code = ? AND expires_at > ? AND used = FALSE
-        ''', (email, hashed_code, current_time))
-        
-        otp_record = cursor.fetchone()
-        
-        if not otp_record:
-            conn.close()
-            return jsonify({'success': False, 'message': 'Invalid or expired OTP'}), 400
-        
-        cursor.execute('UPDATE otp_codes SET used = TRUE WHERE id = ?', (otp_record[0],))
-        
-        cursor.execute('SELECT id, username FROM users WHERE email = ?', (email,))
+        cursor.execute('SELECT id, username, password_hash FROM users WHERE email = ?', (email,))
         user = cursor.fetchone()
         
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
+        
+        user_id, username, stored_password_hash = user
+        
+        if not verify_password(password, stored_password_hash):
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
+        
         current_time = datetime.datetime.now().isoformat()
-        if user:
-            user_id = user[0]
-            cursor.execute('UPDATE users SET last_login = ? WHERE id = ?', 
-                          (current_time, user_id))
-        else:
-            cursor.execute('''
-                INSERT INTO users (email, username, last_login, is_verified)
-                VALUES (?, ?, ?, TRUE)
-            ''', (email, username, current_time))
-            user_id = cursor.lastrowid
-            
-            cursor.execute('''
-                INSERT INTO game_stats (user_id, difficulty_stats)
-                VALUES (?, ?)
-            ''', (user_id, json.dumps({'easy': 0, 'normal': 0, 'hard': 0})))
+        cursor.execute('UPDATE users SET last_login = ? WHERE id = ?', (current_time, user_id))
         
         cursor.execute('''
             SELECT high_score, total_games, total_playtime, average_score, difficulty_stats
@@ -445,20 +244,21 @@ def verify_otp():
         
         token = generate_jwt_token(user_id, email, username)
         
+        user_data = {
+            'id': user_id,
+            'email': email,
+            'username': username,
+            'stats': stats_data
+        }
+        
         return jsonify({
             'success': True,
             'message': 'Login successful!',
             'token': token,
-            'user': {
-                'id': user_id,
-                'email': email,
-                'username': username,
-                'stats': stats_data
-            }
+            'user': user_data
         })
         
     except Exception as e:
-        print(f"Error verifying OTP: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/update-stats', methods=['POST'])
@@ -510,7 +310,6 @@ def update_stats():
         return jsonify({'success': True, 'message': 'Stats updated successfully'})
         
     except Exception as e:
-        print(f"Error updating stats: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/get-stats/<int:user_id>', methods=['GET'])
@@ -542,7 +341,6 @@ def get_stats(user_id):
             return jsonify({'success': False, 'message': 'User stats not found'}), 404
             
     except Exception as e:
-        print(f"Error getting stats: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/user/stats', methods=['GET'])
@@ -584,7 +382,6 @@ def get_user_stats():
             })
             
     except Exception as e:
-        print(f"Error getting user stats: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/user/update-score', methods=['POST'])
@@ -594,7 +391,7 @@ def update_user_score():
         data = request.get_json()
         score = data.get('score', 0)
         playtime = data.get('playtime', 0)
-        difficulty = data.get('difficulty', 2)  # Default to normal
+        difficulty = data.get('difficulty', 2)
         
         if score < 0 or playtime < 0:
             return jsonify({'success': False, 'message': 'Invalid score or playtime'}), 400
@@ -648,7 +445,6 @@ def update_user_score():
             return jsonify({'success': False, 'message': 'User stats not found'}), 404
         
     except Exception as e:
-        print(f"Error updating user score: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/leaderboard/high-scores', methods=['GET'])
@@ -687,7 +483,6 @@ def get_high_scores():
         })
         
     except Exception as e:
-        print(f"Error getting high scores: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/user/rank', methods=['GET'])
@@ -732,7 +527,6 @@ def get_user_rank():
         })
         
     except Exception as e:
-        print(f"Error getting user rank: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/user/profile', methods=['GET'])
@@ -771,7 +565,6 @@ def get_user_profile():
             return jsonify({'success': False, 'message': 'User not found'}), 404
             
     except Exception as e:
-        print(f"Error getting user profile: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @app.route('/api/health', methods=['GET'])
@@ -780,17 +573,5 @@ def health_check():
 
 if __name__ == '__main__':
     init_database()
-    
-    EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS', '')
-    EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD', '')
-    
-    if not EMAIL_ADDRESS or not EMAIL_PASSWORD:
-        print("WARNING: Email credentials not set. Set EMAIL_ADDRESS and EMAIL_PASSWORD environment variables.")
-        print("Example: export EMAIL_ADDRESS='your-email@domain.com'")
-        print("Example: export EMAIL_PASSWORD='your-password'")
-    
-    print("Starting Rock Runner API Server...")
-    print(f"Database: {DB_NAME}")
-    print(f"SMTP Server: {SMTP_SERVER}:{SMTP_PORT}")
     
     app.run(debug=True, host='0.0.0.0', port=8371)
