@@ -31,6 +31,207 @@
             animation: backgroundShift 20s ease-in-out infinite;
         }
 
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 40%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-family: 'Orbitron', monospace;
+            color: #ffff00;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .loading-title {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            margin-bottom: 40px;
+            text-shadow: 
+                0 0 20px rgba(255, 255, 0, 0.8),
+                0 0 40px rgba(255, 255, 0, 0.6),
+                0 0 60px rgba(255, 255, 0, 0.4);
+            animation: titlePulse 2s ease-in-out infinite;
+            text-transform: uppercase;
+        }
+
+        .loading-bar-container {
+            width: 400px;
+            height: 8px;
+            background: rgba(255, 255, 0, 0.2);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 0, 0.5);
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffff00, #ffff66, #ffff00);
+            border-radius: 8px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+            animation: barGlow 1.5s ease-in-out infinite;
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            animation: textFade 2s ease-in-out infinite;
+        }
+
+        .control-message {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #00ff00;
+            opacity: 0;
+            transform: scale(0.8);
+            text-shadow: 
+                0 0 20px rgba(0, 255, 0, 0.8),
+                0 0 40px rgba(0, 255, 0, 0.6);
+            animation: controlAppear 2s ease-out forwards;
+            text-transform: uppercase;
+            margin-top: 20px;
+        }
+
+        .start-prompt {
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: #ffff00;
+            opacity: 0;
+            margin-top: 30px;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.6);
+            animation: promptBlink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes promptBlink {
+            0%, 100% { 
+                opacity: 0.6; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.05);
+            }
+        }
+
+        .loading-stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 0, 0.8), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 0, 0.6), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 0, 0.9), transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 0, 0.4), transparent),
+                radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 0, 0.7), transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: loadingStars 10s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% {
+                text-shadow: 
+                    0 0 20px rgba(255, 255, 0, 0.8),
+                    0 0 40px rgba(255, 255, 0, 0.6),
+                    0 0 60px rgba(255, 255, 0, 0.4);
+                transform: scale(1);
+            }
+            50% {
+                text-shadow: 
+                    0 0 30px rgba(255, 255, 0, 1),
+                    0 0 50px rgba(255, 255, 0, 0.8),
+                    0 0 70px rgba(255, 255, 0, 0.6);
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes barGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 255, 0, 1);
+            }
+        }
+
+        @keyframes textFade {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes controlAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1) translateY(-5px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes loadingStars {
+            0% { 
+                background-position: 0 0;
+                transform: translateY(0);
+            }
+            100% { 
+                background-position: 0 100px;
+                transform: translateY(-10px);
+            }
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .loading-title {
+                font-size: 32px;
+                letter-spacing: 4px;
+            }
+            
+            .loading-bar-container {
+                width: 300px;
+            }
+            
+            .control-message {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+            
+            .loading-text {
+                font-size: 16px;
+            }
+            
+            .start-prompt {
+                font-size: 16px;
+                letter-spacing: 1px;
+                margin-top: 20px;
+            }
+        }
+
         @keyframes backgroundShift {
             0%, 100% { 
                 background: radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 40%, #000000 100%);
@@ -1100,6 +1301,70 @@
             }
         }
 
+        .music-control {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            z-index: 50;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .music-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 0, 0.2);
+            border: 3px solid rgba(255, 255, 0, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+            user-select: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+        }
+
+        .music-btn:hover {
+            background: rgba(255, 255, 0, 0.4);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+        }
+
+        .music-btn:active {
+            transform: scale(0.95);
+        }
+
+        .music-btn.muted {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: rgba(255, 0, 0, 0.8);
+            color: #ff4444;
+            text-shadow: 0 0 10px rgba(255, 68, 68, 0.8);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+        }
+
+        .music-btn.muted:hover {
+            background: rgba(255, 0, 0, 0.4);
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .music-control {
+                top: 15px;
+                right: 15px;
+            }
+            
+            .music-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
         @keyframes themeWave {
             0% {
                 transform: scale(0.1);
@@ -1219,7 +1484,6 @@
             transform: scale(0.8) translateY(10px) rotate(-2deg);
             transition: opacity 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             box-shadow: 0 0 20px rgba(255,255,0,0.5), inset 0 0 10px rgba(255,255,0,0.1);
-            border: 1px solid rgba(255,255,0,0.3);
             animation: bubblePulse 2s ease-in-out infinite;
         }
 
@@ -1306,6 +1570,21 @@
     </style>
 </head>
 <body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-stars"></div>
+        <div class="loading-title">Rock Runner</div>
+        <div class="loading-text">Initializing Systems...</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+        <div class="control-message" id="controlMessage" style="display: none;">
+            Take Over Control
+        </div>
+        <div class="start-prompt" id="startPrompt" style="display: none;">
+            Click anywhere or press any key to begin
+        </div>
+    </div>
+
     <div class="game-container">
         <div class="road"></div>
         <div class="lane-lines"></div>
@@ -1371,7 +1650,110 @@
         <div class="mobile-btn pause-btn-mobile" id="pauseBtn">⏸️</div>
     </div>
 
+    <audio id="backgroundMusic" loop>
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <audio id="lifeSound">
+        <source src="life.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+        <div class="music-control">
+            <button id="muteButton" class="music-btn" onclick="toggleMusic()">🔊</button>
+        </div>
+
     <script>
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingBar = document.getElementById('loadingBar');
+    const controlMessage = document.getElementById('controlMessage');
+    const startPrompt = document.getElementById('startPrompt');
+    
+    let loadingProgress = 0;
+    let gameInitialized = false;
+    let waitingForInput = false;
+
+    function updateLoadingBar() {
+        loadingBar.style.width = loadingProgress + '%';
+    }
+
+    function simulateLoading() {
+        const loadingInterval = setInterval(() => {
+            loadingProgress += Math.random() * 8 + 2;
+            
+            if (loadingProgress >= 100) {
+                loadingProgress = 100;
+                clearInterval(loadingInterval);
+                showControlMessage();
+            }
+            
+            updateLoadingBar();
+        }, 150 + Math.random() * 100);
+    }
+
+    function showControlMessage() {
+        setTimeout(() => {
+            controlMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                startPrompt.style.display = 'block';
+                waitingForInput = true;
+                setupInputListeners();
+            }, 1500);
+        }, 500);
+    }
+
+    function setupInputListeners() {
+        const handleUserInput = () => {
+            if (waitingForInput) {
+                waitingForInput = false;
+                removeInputListeners();
+                startGame();
+            }
+        };
+
+        document.addEventListener('click', handleUserInput);
+        document.addEventListener('keydown', handleUserInput);
+        document.addEventListener('touchstart', handleUserInput);
+
+        window.loadingInputHandler = handleUserInput;
+    }
+
+    function removeInputListeners() {
+        if (window.loadingInputHandler) {
+            document.removeEventListener('click', window.loadingInputHandler);
+            document.removeEventListener('keydown', window.loadingInputHandler);
+            document.removeEventListener('touchstart', window.loadingInputHandler);
+            window.loadingInputHandler = null;
+        }
+    }
+
+    function startGame() {
+        loadingScreen.classList.add('hidden');
+        
+        setTimeout(() => {
+            if (!gameInitialized) {
+                initializeGame();
+                gameInitialized = true;
+            }
+        }, 1000);
+    }
+
+    function initializeGame() {
+        backgroundMusic.play().catch(e => console.log('Could not auto-play music:', e));
+        
+        gameLoop();
+        
+        startAIAssistant();
+    }
+
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            simulateLoading();
+        }, 500);
+    });
+
     const gameContainer = document.querySelector('.game-container');
     const car = document.getElementById('car');
     const scoreElement = document.getElementById('score');
@@ -1659,14 +2041,9 @@
                     gameState.particleSpeed = Math.min(12, gameState.particleSpeed + 0.2);
                     gameState.baseSpawnRate = Math.min(0.05, gameState.baseSpawnRate + 0.003);
                     applySpawnSettings();
-                    gameState.gameSpeed = Math.min(3, gameState.gameSpeed + 0.2);
-                    
-                    const road = document.querySelector('.road');
-                    road.style.animationDuration = (15 / gameState.gameSpeed) + 's';
                 }
             }
         }
-
         function animateScoreCount(fromScore, toScore) {
             const duration = 600;
             const steps = toScore - fromScore;
@@ -1936,6 +2313,45 @@
                 #newRecordMessage {
                     text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 20px #00ff00, 0 0 30px #00ff00 !important;
                 }
+                
+                @keyframes captainGlow {
+                    0% {
+                        filter: drop-shadow(0 0 5px ${rgbaString(newColor, 0.3)});
+                    }
+                    100% {
+                        filter: drop-shadow(0 0 15px ${newColor});
+                    }
+                }
+                
+                @keyframes bubblePulse {
+                    0%, 100% {
+                        box-shadow: 0 0 20px ${rgbaString(newColor, 0.5)}, inset 0 0 10px ${rgbaString(newColor, 0.1)};
+                    }
+                    50% {
+                        box-shadow: 0 0 25px ${rgbaString(newColor, 0.7)}, inset 0 0 15px ${rgbaString(newColor, 0.2)};
+                    }
+                }
+                
+                .captain-figure {
+                    animation: captainFloat 3s ease-in-out infinite, captainGlow 2s ease-in-out infinite alternate !important;
+                }
+                
+                .speech-bubble {
+                    box-shadow: 0 0 20px ${newColor}, inset 0 0 10px ${rgbaString(newColor, 0.1)} !important;
+                    animation: bubblePulse 2s ease-in-out infinite !important;
+                }
+                
+                .music-btn:not(.muted) {
+                    color: ${newColor} !important;
+                    border-color: ${rgbaString(newColor, 0.8)} !important;
+                    text-shadow: 0 0 10px ${newColor} !important;
+                    box-shadow: 0 0 15px ${rgbaString(newColor, 0.3)} !important;
+                }
+                
+                .music-btn:not(.muted):hover {
+                    background: ${rgbaString(newColor, 0.4)} !important;
+                    box-shadow: 0 0 20px ${rgbaString(newColor, 0.6)} !important;
+                }
             `;
             document.head.appendChild(style);
             
@@ -1949,6 +2365,36 @@
                 btn.style.setProperty('border-color', rgbaString(newColor, 0.8), 'important');
                 btn.style.setProperty('text-shadow', `0 0 10px ${newColor}`, 'important');
             });
+            
+            const aiAssistant = document.getElementById('aiAssistant');
+            const speechBubble = document.getElementById('speechBubble');
+            const aiMessage = document.getElementById('aiMessage');
+            const captainFigure = document.querySelector('.captain-figure');
+            
+            if (speechBubble) {
+                speechBubble.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                speechBubble.style.setProperty('color', newColor, 'important');
+                speechBubble.style.setProperty('box-shadow', `0 0 20px ${newColor}, inset 0 0 10px ${rgbaString(newColor, 0.1)}`, 'important');
+            }
+            
+            if (aiMessage) {
+                aiMessage.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                aiMessage.style.setProperty('color', newColor, 'important');
+            }
+            
+            if (captainFigure) {
+                captainFigure.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                captainFigure.style.setProperty('filter', `drop-shadow(0 0 15px ${newColor})`, 'important');
+            }
+            
+            const muteButton = document.getElementById('muteButton');
+            if (muteButton && !muteButton.classList.contains('muted')) {
+                muteButton.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                muteButton.style.setProperty('color', newColor, 'important');
+                muteButton.style.setProperty('border-color', rgbaString(newColor, 0.8), 'important');
+                muteButton.style.setProperty('text-shadow', `0 0 10px ${newColor}`, 'important');
+                muteButton.style.setProperty('box-shadow', `0 0 15px ${rgbaString(newColor, 0.3)}`, 'important');
+            }
             
             car.style.transition = 'filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.35)})`;
@@ -2158,8 +2604,7 @@
                 const particle = document.createElement('div');
                 particle.className = 'particle';
                 
-                const lane = Math.floor(Math.random() * 4);
-                const laneCenter = lanePositions[lane];
+                const randomX = 20 + Math.random() * (window.innerWidth - 80);
                 
                 const sizeVariation = 0.7 + Math.random() * 0.8;
                 const rotationSpeed = 2 + Math.random() * 4;
@@ -2180,7 +2625,7 @@
                 const mobileScale = isMobile ? 0.8 : 1;
                 const finalSize = sizeVariation * typeModifier * mobileScale;
                 
-                particle.style.left = (laneCenter - 20) + 'px';
+                particle.style.left = (randomX - 20) + 'px';
                 const spawnY = -80 - Math.random() * 120;
                 particle.style.setProperty('--py', spawnY + 'px');
                 particle.style.setProperty('--scale', finalSize);
@@ -2203,7 +2648,7 @@
                     gameContainer.appendChild(particle);
                     gameState.particles.push({
                         element: particle,
-                        lane: lane,
+                        x: randomX,
                         y: spawnY,
                         size: finalSize,
                         type: asteroidType
@@ -2222,10 +2667,11 @@
                 particle.element.style.setProperty('--py', particle.y + 'px');
 
                 const carCenterX = gameState.currentPosition;
-                const particleCenterX = lanePositions[particle.lane];
+                const particleCenterX = particle.x;
                 const horizontalDistance = Math.abs(carCenterX - particleCenterX);
                 
-                if (horizontalDistance < 50 && 
+                const collisionRadius = 35 + (particle.size * 10);
+                if (horizontalDistance < collisionRadius && 
                     particle.y > window.innerHeight - 300 && particle.y < window.innerHeight - 100) {
                     
                     if (particle.element && particle.element.parentNode) {
@@ -2233,6 +2679,7 @@
                     }
                     gameState.lives--;
                     updateHearts();
+                    playLifeSound();
                     
                     car.style.filter = 'brightness(50%) sepia(100%) hue-rotate(0deg)';
                     setTimeout(() => {
@@ -2293,6 +2740,8 @@
             
             gameOverElement.style.display = 'block';
             
+            reduceMusicVolume();
+            
             const road = document.querySelector('.road');
             if (road) {
                 road.style.animationPlayState = 'paused';
@@ -2316,6 +2765,8 @@
             
             gameState.isPaused = true;
             pauseMenuElement.style.display = 'block';
+            
+            reduceMusicVolume();
             
             const road = document.querySelector('.road');
             if (road) {
@@ -2350,6 +2801,8 @@
             
             gameState.isPaused = false;
             pauseMenuElement.style.display = 'none';
+            
+            restoreMusicVolume();
             
             const road = document.querySelector('.road');
             if (road) {
@@ -2439,6 +2892,12 @@
             gameOverElement.style.display = 'none';
             pauseMenuElement.style.display = 'none';
 
+            restoreMusicVolume();
+            
+            if (!backgroundMusic.muted) {
+                backgroundMusic.play().catch(e => console.log('Could not play music:', e));
+            }
+
             updateCarPosition();
             car.style.filter = `drop-shadow(0 0 15px ${rgbaString(gameState.themeColor, 0.3)})`;
             car.style.transform = 'rotate(0deg) scale(1)';
@@ -2522,10 +2981,6 @@
                 gameState.currentPosition = lanePositions[gameState.currentLane];
                 car.style.left = gameState.currentPosition - 30 + 'px';
             }
-            gameState.particles.forEach(p => {
-                const laneCenter = lanePositions[p.lane];
-                p.element.style.left = (laneCenter - 20) + 'px';
-            });
             applySpawnSettings();
         }
         window.addEventListener('resize', recomputeLanes);
@@ -2599,7 +3054,7 @@
                     contextualPrompts = [
                         `Score: ${currentScore}, lives: ${currentLives}. Give a helpful tip.`,
                         `Current stats: ${currentScore} points, ${currentLives} lives. Quick advice.`,
-                        `${currentScore} points so far with ${currentLives} lives. Useful tip.`
+                        `${currentScore} points so far with ${currentLives} lives. Useful tip.`,
                     ];
                 }
                 
@@ -2682,9 +3137,95 @@
             });
         }
 
-        startAIAssistant();
-        
-        gameLoop();
+
+
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const lifeSound = document.getElementById('lifeSound');
+        const muteButton = document.getElementById('muteButton');
+
+        backgroundMusic.volume = 0.5;
+        backgroundMusic.loop = true;
+        lifeSound.volume = 0.7;
+
+
+        const originalVolume = 0.5;
+        const reducedVolume = 0.2;
+        let currentVolumeTarget = originalVolume;
+        let volumeTransitionInterval = null;
+
+        function setMusicVolume(volume) {
+            if (!backgroundMusic.muted) {
+                backgroundMusic.volume = Math.max(0, Math.min(1, volume));
+            }
+        }
+
+        function smoothVolumeTransition(targetVolume, duration = 800) {
+            if (volumeTransitionInterval) {
+                clearInterval(volumeTransitionInterval);
+            }
+            
+            if (backgroundMusic.muted) return;
+            
+            currentVolumeTarget = targetVolume;
+            const startVolume = backgroundMusic.volume;
+            const volumeDifference = targetVolume - startVolume;
+            const steps = Math.max(20, duration / 40);
+            const stepSize = volumeDifference / steps;
+            let currentStep = 0;
+            
+            volumeTransitionInterval = setInterval(() => {
+                currentStep++;
+                const progress = currentStep / steps;
+                
+                const easedProgress = progress < 0.5 
+                    ? 2 * progress * progress 
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+                
+                const newVolume = startVolume + (volumeDifference * easedProgress);
+                setMusicVolume(newVolume);
+                
+                if (currentStep >= steps) {
+                    clearInterval(volumeTransitionInterval);
+                    volumeTransitionInterval = null;
+                    setMusicVolume(targetVolume);
+                }
+            }, duration / steps);
+        }
+
+        function reduceMusicVolume() {
+            smoothVolumeTransition(reducedVolume, 1000);
+        }
+
+        function restoreMusicVolume() {
+            smoothVolumeTransition(originalVolume, 600);
+        }
+
+        function playLifeSound() {
+            if (!backgroundMusic.muted && lifeSound) {
+                lifeSound.currentTime = 0;
+                lifeSound.play().catch(e => console.log('Could not play life sound:', e));
+            }
+        }
+
+        function toggleMusic() {
+            if (backgroundMusic.muted) {
+                backgroundMusic.muted = false;
+                muteButton.textContent = '🔊';
+                muteButton.classList.remove('muted');
+                if (gameState.isPaused || !gameState.gameRunning) {
+                    smoothVolumeTransition(reducedVolume, 400);
+                } else {
+                    smoothVolumeTransition(originalVolume, 400);
+                }
+            } else {
+                smoothVolumeTransition(0, 300);
+                setTimeout(() => {
+                    backgroundMusic.muted = true;
+                    muteButton.textContent = '🔇';
+                    muteButton.classList.add('muted');
+                }, 300);
+            }
+        }
     </script>
 </body>
 </html>
