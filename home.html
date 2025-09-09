@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Rock Runner - Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #FFD700;
+            --dark-gold: #B8860B;
+            --space-black: #0a0a0a;
+            --panel-bg: rgba(0, 0, 0, 0.85);
+            --border-glow: rgba(255, 215, 0, 0.5);
+            --success-green: #00ff41;
+            --error-red: #ff073a;
+            --info-blue: #00d4ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Orbitron', monospace;
+            color: var(--primary-gold);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255, 215, 0, 0.8), transparent),
+                radial-gradient(1px 1px at 40px 70px, rgba(255, 215, 0, 0.6), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255, 215, 0, 0.9), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255, 215, 0, 0.4), transparent);
+            background-repeat: repeat;
+            background-size: 200px 150px;
+            animation: starfield 30s linear infinite;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        @keyframes starfield {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(150px); }
+        }
+
+        .command-center {
+            display: grid;
+            grid-template-areas: 
+                "header header"
+                "main sidebar";
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: auto 1fr;
+            min-height: 100vh;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            grid-area: header;
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-glow);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-shadow: 
+                0 0 20px var(--primary-gold),
+                0 0 40px var(--primary-gold),
+                0 0 60px var(--primary-gold);
+            margin-bottom: 10px;
+            animation: titlePulse 4s ease-in-out infinite;
+        }
+
+        .game-subtitle {
+            font-size: 18px;
+            letter-spacing: 3px;
+            opacity: 0.8;
+            font-family: 'Exo 2', sans-serif;
+            color: #cccccc;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+        }
+
+        .main-panel {
+            grid-area: main;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 2px solid var(--border-glow);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--primary-gold);
+            letter-spacing: 2px;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .auth-step {
+            display: none;
+        }
+
+        .auth-step.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-gold);
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 12px;
+            color: var(--primary-gold);
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 215, 0, 0.5);
+        }
+
+        .otp-input {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 8px;
+            font-weight: 700;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-gold), var(--dark-gold));
+            color: var(--space-black);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(45deg, var(--dark-gold), #8b6914);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--primary-gold);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: var(--primary-gold);
+            transform: translateY(-2px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        .auth-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .auth-message.success {
+            background: rgba(0, 255, 65, 0.1);
+            border: 2px solid var(--success-green);
+            color: var(--success-green);
+        }
+
+        .auth-message.error {
+            background: rgba(255, 7, 58, 0.1);
+            border: 2px solid var(--error-red);
+            color: var(--error-red);
+        }
+
+        .auth-message.info {
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid var(--info-blue);
+            color: var(--info-blue);
+        }
+
+        .user-dashboard {
+            display: none;
+        }
+
+        .user-dashboard.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .welcome-banner {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .welcome-message {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--primary-gold);
+        }
+
+        .user-rank {
+            font-size: 16px;
+            color: #cccccc;
+            font-family: 'Exo 2', sans-serif;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 215, 0, 0.05);
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 215, 0, 0.4);
+            background: rgba(255, 215, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--primary-gold);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #cccccc;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .game-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .quick-btn {
+            padding: 10px 20px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            color: var(--primary-gold);
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: var(--primary-gold);
+            transform: translateY(-2px);
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 30px;
+            background: var(--panel-bg);
+            border: 2px solid var(--primary-gold);
+            border-radius: 12px;
+            color: var(--primary-gold);
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+            z-index: 10000;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+            animation: notificationSlide 0.5s ease-out;
+        }
+
+        @keyframes notificationSlide {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--primary-gold);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-gold);
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-entry:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.4);
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+            border-color: #ffd700;
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(192, 192, 192, 0.1));
+            border-color: #c0c0c0;
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), rgba(205, 127, 50, 0.1));
+            border-color: #cd7f32;
+        }
+
+        @media (max-width: 1024px) {
+            .command-center {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "sidebar";
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            
+            .game-title {
+                font-size: 48px;
+                letter-spacing: 4px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .command-center {
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .main-panel, .panel {
+                padding: 25px 20px;
+            }
+            
+            .game-title {
+                font-size: 36px;
+                letter-spacing: 2px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="command-center">
+        <header class="header">
+            <h1 class="game-title">ROCK RUNNER</h1>
+            <p class="game-subtitle">Command Center • Starship Navigation System</p>
+        </header>
+
+        <main class="main-panel">
+            <div class="auth-container" id="authContainer">
+                <div class="auth-step active" id="emailStep">
+                    <h2 class="panel-title">Captain Authentication</h2>
+                    <div class="input-group">
+                        <label class="input-label" for="email">Email Address</label>
+                        <input type="email" id="email" class="input-field" placeholder="captain@starfleet.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="username">Captain Name</label>
+                        <input type="text" id="username" class="input-field" placeholder="Enter your callsign" maxlength="20" required>
+                    </div>
+                    <button class="btn btn-primary" id="requestOtpBtn" onclick="requestOTP()">
+                        Send Verification Code
+                    </button>
+                    <div class="auth-message" id="authMessage"></div>
+                </div>
+
+                <div class="auth-step" id="otpStep">
+                    <h2 class="panel-title">Verification Required</h2>
+                    <p style="text-align: center; margin-bottom: 25px; color: #cccccc;">
+                        A secure verification code has been transmitted to your communication device.
+                    </p>
+                    <div class="input-group">
+                        <label class="input-label" for="otpCode">Authorization Code</label>
+                        <input type="text" id="otpCode" class="input-field otp-input" placeholder="000000" maxlength="6" required>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="showEmailStep()">← Back</button>
+                        <button class="btn btn-primary" onclick="verifyOTP()">Verify & Login</button>
+                    </div>
+                    <div class="auth-message" id="otpMessage"></div>
+                </div>
+            </div>
+
+            <div class="user-dashboard" id="userDashboard">
+                <div class="welcome-banner">
+                    <div class="welcome-message" id="welcomeMessage">Welcome aboard, Captain!</div>
+                    <div class="user-rank" id="userRankDisplay">Connecting to fleet command...</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-value" id="highScore">0</span>
+                        <span class="stat-label">High Score</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="gamesPlayed">0</span>
+                        <span class="stat-label">Missions</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalTime">0h</span>
+                        <span class="stat-label">Flight Time</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="averageScore">0</span>
+                        <span class="stat-label">Avg Score</span>
+                    </div>
+                </div>
+
+                <div class="game-actions">
+                    <button class="btn btn-primary" onclick="startGame()">
+                        🚀 Launch Mission
+                    </button>
+                    
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="viewProfile()">👤 Profile</button>
+                        <button class="quick-btn" onclick="viewLeaderboard()">🏆 Rankings</button>
+                        <button class="quick-btn" onclick="openSettings()">⚙️ Settings</button>
+                        <button class="quick-btn" onclick="logout()">🚪 Logout</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="sidebar">
+            <div class="panel">
+                <div class="panel-title">System Status</div>
+                <div style="color: #cccccc; font-size: 14px; line-height: 1.6;">
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: var(--success-green);">●</span> Navigation Systems: Online
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: var(--success-green);">●</span> Communication Array: Active
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: var(--primary-gold);">●</span> Defense Grid: Standby
+                    </div>
+                    <div>
+                        <span style="color: var(--info-blue);">●</span> Quantum Drive: Ready
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Mission Briefing</div>
+                <div style="color: #cccccc; font-size: 14px; line-height: 1.6;">
+                    Navigate through the asteroid field using precise timing and spatial awareness. 
+                    Collect energy cores while avoiding collision with space debris. 
+                    Each successful maneuver increases your fleet ranking.
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Fleet Communications</div>
+                <div style="color: #cccccc; font-size: 12px;">
+                    <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,215,0,0.1); border-radius: 6px;">
+                        <strong style="color: var(--primary-gold);">COMMAND:</strong> All pilots report for duty rotation.
+                    </div>
+                    <div style="margin-bottom: 8px; padding: 8px; background: rgba(0,255,65,0.1); border-radius: 6px;">
+                        <strong style="color: var(--success-green);">PILOT-7749:</strong> Navigation systems optimal.
+                    </div>
+                    <div style="padding: 8px; background: rgba(0,212,255,0.1); border-radius: 6px;">
+                        <strong style="color: var(--info-blue);">FLEET:</strong> New high score record achieved!
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8371/api';
+        
+        class RockRunnerApp {
+            constructor() {
+                this.currentUser = null;
+                this.authToken = null;
+                this.gameSettings = {
+                    musicVolume: 50,
+                    sfxVolume: 70,
+                    difficulty: 2,
+                    particleEffects: true,
+                    screenShake: true,
+                    aiAssistant: true
+                };
+                this.init();
+            }
+
+            async init() {
+                this.loadSettings();
+                this.setupEventListeners();
+                await this.checkSavedAuth();
+            }
+
+            setupEventListeners() {
+                document.getElementById('email').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.requestOTP();
+                });
+                
+                document.getElementById('username').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.requestOTP();
+                });
+                
+                document.getElementById('otpCode').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.verifyOTP();
+                });
+
+                document.getElementById('otpCode').addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                });
+            }
+
+            async apiCall(endpoint, options = {}) {
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                };
+                
+                if (this.authToken) {
+                    config.headers['Authorization'] = `Bearer ${this.authToken}`;
+                }
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+                    const data = await response.json();
+                    
+                    if (response.status === 401 && data.message && data.message.includes('expired')) {
+                        this.clearAuth();
+                        this.showNotification('Session expired. Please login again.', 'error');
+                        return { response, data: { success: false, message: 'Session expired' } };
+                    }
+                    
+                    return { response, data };
+                } catch (error) {
+                    console.error('API call failed:', error);
+                    throw error;
+                }
+            }
+
+            clearAuth() {
+                this.currentUser = null;
+                this.authToken = null;
+                localStorage.removeItem('rockRunnerUser');
+                localStorage.removeItem('rockRunnerToken');
+                this.updateDisplay();
+            }
+
+            saveAuth(user, token) {
+                this.currentUser = user;
+                this.authToken = token;
+                localStorage.setItem('rockRunnerUser', JSON.stringify(user));
+                localStorage.setItem('rockRunnerToken', token);
+                this.updateDisplay();
+            }
+
+            async checkSavedAuth() {
+                const savedUser = localStorage.getItem('rockRunnerUser');
+                const savedToken = localStorage.getItem('rockRunnerToken');
+                
+                if (savedUser && savedToken) {
+                    try {
+                        this.currentUser = JSON.parse(savedUser);
+                        this.authToken = savedToken;
+                        
+                        this.updateDisplay();
+                        await this.refreshUserStats();
+                        await this.loadUserRank();
+                        
+                    } catch (e) {
+                        console.error('Error loading saved auth:', e);
+                        this.clearAuth();
+                    }
+                }
+            }
+
+            async requestOTP() {
+                const email = document.getElementById('email').value.trim();
+                const username = document.getElementById('username').value.trim();
+                
+                if (!email || !username) {
+                    this.showAuthMessage('Please enter both email and username', 'error');
+                    return;
+                }
+
+                if (!this.validateEmail(email)) {
+                    this.showAuthMessage('Please enter a valid email address', 'error');
+                    return;
+                }
+                
+                const btn = document.getElementById('requestOtpBtn');
+                btn.disabled = true;
+                btn.textContent = 'Sending...';
+                
+                try {
+                    this.showAuthMessage('Transmitting verification code to your device...', 'info');
+                    
+                    const response = await fetch(`${API_BASE_URL}/request-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, username })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showAuthMessage('Verification code transmitted successfully!', 'success');
+                        this.showOTPStep();
+                    } else {
+                        this.showAuthMessage(data.message, 'error');
+                    }
+                } catch (error) {
+                    this.showAuthMessage('Communication error. Please try again.', 'error');
+                    console.error('OTP request error:', error);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Send Verification Code';
+                }
+            }
+
+            async verifyOTP() {
+                const email = document.getElementById('email').value.trim();
+                const username = document.getElementById('username').value.trim();
+                const otp = document.getElementById('otpCode').value.trim();
+                
+                if (!otp || otp.length !== 6) {
+                    this.showOTPMessage('Please enter the complete 6-digit authorization code', 'error');
+                    return;
+                }
+                
+                const verifyBtn = document.querySelector('#otpStep .btn-primary');
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = 'Verifying...';
+                
+                try {
+                    this.showOTPMessage('Authenticating with fleet command...', 'info');
+                    
+                    const response = await fetch(`${API_BASE_URL}/verify-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, username, otp })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.saveAuth(data.user, data.token);
+                        this.showOTPMessage('Authentication successful! Welcome aboard, Captain.', 'success');
+                        
+                        await this.refreshUserStats();
+                        await this.loadUserRank();
+                        
+                        setTimeout(() => {
+                            this.hideAuthMessage();
+                        }, 2000);
+                    } else {
+                        this.showOTPMessage(data.message, 'error');
+                    }
+                } catch (error) {
+                    this.showOTPMessage('Communication error. Please try again.', 'error');
+                    console.error('OTP verification error:', error);
+                } finally {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify & Login';
+                }
+            }
+
+            validateEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+
+            showEmailStep() {
+                document.getElementById('emailStep').classList.add('active');
+                document.getElementById('otpStep').classList.remove('active');
+                document.getElementById('otpCode').value = '';
+                this.hideAuthMessage();
+            }
+
+            showOTPStep() {
+                document.getElementById('emailStep').classList.remove('active');
+                document.getElementById('otpStep').classList.add('active');
+                setTimeout(() => {
+                    document.getElementById('otpCode').focus();
+                }, 300);
+            }
+
+            showAuthMessage(message, type) {
+                const messageDiv = document.getElementById('authMessage');
+                messageDiv.textContent = message;
+                messageDiv.className = `auth-message ${type}`;
+                messageDiv.style.display = 'block';
+            }
+
+            showOTPMessage(message, type) {
+                const messageDiv = document.getElementById('otpMessage');
+                messageDiv.textContent = message;
+                messageDiv.className = `auth-message ${type}`;
+                messageDiv.style.display = 'block';
+            }
+
+            hideAuthMessage() {
+                document.getElementById('authMessage').style.display = 'none';
+                document.getElementById('otpMessage').style.display = 'none';
+            }
+
+            updateDisplay() {
+                const authContainer = document.getElementById('authContainer');
+                const userDashboard = document.getElementById('userDashboard');
+                
+                if (this.currentUser && this.authToken) {
+                    authContainer.style.display = 'none';
+                    userDashboard.classList.add('active');
+                    
+                    document.getElementById('welcomeMessage').textContent = 
+                        `Welcome aboard, Captain ${this.currentUser.username}!`;
+                        
+                    this.updateUserStats();
+                } else {
+                    authContainer.style.display = 'block';
+                    userDashboard.classList.remove('active');
+                    this.showEmailStep();
+                }
+            }
+
+            updateUserStats() {
+                if (!this.currentUser || !this.currentUser.stats) return;
+                
+                const stats = this.currentUser.stats;
+                document.getElementById('highScore').textContent = stats.highScore.toLocaleString();
+                document.getElementById('gamesPlayed').textContent = stats.totalGames.toLocaleString();
+                document.getElementById('totalTime').textContent = Math.floor(stats.totalPlaytime / 60) + 'h';
+                document.getElementById('averageScore').textContent = stats.averageScore.toFixed(1);
+            }
+
+            async refreshUserStats() {
+                if (!this.authToken) return;
+                
+                try {
+                    const { data } = await this.apiCall('/user/stats');
+                    
+                    if (data.success) {
+                        if (this.currentUser) {
+                            this.currentUser.stats = data.stats;
+                            localStorage.setItem('rockRunnerUser', JSON.stringify(this.currentUser));
+                            this.updateUserStats();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Stats refresh error:', error);
+                }
+            }
+
+            async loadUserRank() {
+                if (!this.authToken) return;
+                
+                try {
+                    const { data } = await this.apiCall('/user/rank');
+                    
+                    if (data.success) {
+                        const rankDisplay = document.getElementById('userRankDisplay');
+                        rankDisplay.textContent = `Fleet Rank: #${data.rank} • Top ${Math.round(100 - data.percentile)}% of pilots`;
+                    }
+                } catch (error) {
+                    console.error('Rank loading error:', error);
+                }
+            }
+
+            logout() {
+                this.clearAuth();
+                this.showNotification('Logout successful. Safe travels, Captain.', 'info');
+            }
+
+            async viewLeaderboard() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/leaderboard/high-scores?limit=10`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.displayLeaderboard(data.leaderboard);
+                    } else {
+                        this.showNotification('Unable to access fleet rankings', 'error');
+                    }
+                } catch (error) {
+                    console.error('Leaderboard loading error:', error);
+                    this.showNotification('Communication error with fleet command', 'error');
+                }
+            }
+
+            displayLeaderboard(leaderboard) {
+                const modal = this.createModal('Fleet Rankings - Top Pilots', `
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${leaderboard.map(entry => `
+                            <div class="leaderboard-entry ${entry.rank <= 3 ? `rank-${entry.rank}` : ''}">
+                                <span style="font-weight: bold; min-width: 40px;">#${entry.rank}</span>
+                                <span style="flex: 1; text-align: center;">${entry.username}</span>
+                                <span style="font-weight: bold; min-width: 80px; text-align: right;">${entry.highScore.toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `);
+                
+                document.body.appendChild(modal);
+            }
+
+            async viewProfile() {
+                if (!this.authToken) return;
+                
+                try {
+                    const { data } = await this.apiCall('/user/profile');
+                    
+                    if (data.success) {
+                        this.displayUserProfile(data.profile);
+                    } else {
+                        this.showNotification('Unable to access pilot profile', 'error');
+                    }
+                } catch (error) {
+                    console.error('Profile loading error:', error);
+                    this.showNotification('Profile access error', 'error');
+                }
+            }
+
+            displayUserProfile(profile) {
+                const modal = this.createModal('Pilot Profile', `
+                    <div style="margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                            <span style="font-weight: bold;">Email:</span>
+                            <span style="color: #ffffff;">${profile.email}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                            <span style="font-weight: bold;">Captain Name:</span>
+                            <span style="color: #ffffff;">${profile.username}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                            <span style="font-weight: bold;">Enlisted:</span>
+                            <span style="color: #ffffff;">${new Date(profile.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                            <span style="font-weight: bold;">Last Mission:</span>
+                            <span style="color: #ffffff;">${new Date(profile.lastLogin).toLocaleDateString()}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                            <span style="font-weight: bold;">High Score:</span>
+                            <span style="color: #ffffff;">${profile.highScore.toLocaleString()}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                            <span style="font-weight: bold;">Missions Completed:</span>
+                            <span style="color: #ffffff;">${profile.totalGames}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                            <span style="font-weight: bold;">Total Flight Time:</span>
+                            <span style="color: #ffffff;">${Math.floor(profile.totalPlaytime / 60)} hours</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 15px 0;">
+                            <span style="font-weight: bold;">Average Performance:</span>
+                            <span style="color: #ffffff;">${profile.averageScore.toFixed(1)}</span>
+                        </div>
+                    </div>
+                `);
+                
+                document.body.appendChild(modal);
+            }
+
+            createModal(title, content) {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h2 class="modal-title">${title}</h2>
+                        ${content}
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()" style="margin-top: 20px;">
+                            Close
+                        </button>
+                    </div>
+                `;
+                
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
+                
+                return modal;
+            }
+
+            loadSettings() {
+                const saved = localStorage.getItem('rockRunnerSettings');
+                if (saved) {
+                    this.gameSettings = { ...this.gameSettings, ...JSON.parse(saved) };
+                }
+            }
+
+            saveSettings() {
+                localStorage.setItem('rockRunnerSettings', JSON.stringify(this.gameSettings));
+                this.showNotification('Configuration saved successfully', 'success');
+            }
+
+            startGame() {
+                if (!this.currentUser) {
+                    this.showNotification('Authentication required for mission launch', 'error');
+                    return;
+                }
+                
+                const urlParams = new URLSearchParams();
+                urlParams.set('settings', btoa(JSON.stringify(this.gameSettings)));
+                urlParams.set('user', btoa(JSON.stringify(this.currentUser)));
+                
+                window.location.href = `index.html?${urlParams.toString()}`;
+            }
+
+            openSettings() {
+                this.showNotification('Settings panel coming soon', 'info');
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.textContent = message;
+                
+                if (type === 'error') {
+                    notification.style.borderColor = 'var(--error-red)';
+                    notification.style.color = 'var(--error-red)';
+                } else if (type === 'success') {
+                    notification.style.borderColor = 'var(--success-green)';
+                    notification.style.color = 'var(--success-green)';
+                }
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'notificationSlide 0.5s ease-out reverse';
+                    setTimeout(() => notification.remove(), 500);
+                }, 3000);
+            }
+        }
+
+        const app = new RockRunnerApp();
+
+        function requestOTP() { app.requestOTP(); }
+        function verifyOTP() { app.verifyOTP(); }
+        function showEmailStep() { app.showEmailStep(); }
+        function logout() { app.logout(); }
+        function viewLeaderboard() { app.viewLeaderboard(); }
+        function viewProfile() { app.viewProfile(); }
+        function openSettings() { app.openSettings(); }
+        function startGame() { app.startGame(); }
+    </script>
+</body>
+</html>

@@ -276,8 +276,8 @@ def generate_jwt_token(user_id, email, username):
         'user_id': user_id,
         'email': email,
         'username': username,
-        'iat': datetime.datetime.utcnow(),
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=JWT_EXPIRATION_HOURS)
+        'iat': datetime.datetime.utcnow().timestamp(),
+        'exp': (datetime.datetime.utcnow() + datetime.timedelta(hours=JWT_EXPIRATION_HOURS)).timestamp()
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -335,13 +335,14 @@ def request_otp():
         otp_code = generate_otp()
         hashed_code = hash_code(otp_code)
         
-        expires_at = datetime.datetime.now() + datetime.timedelta(minutes=10)
+        expires_at = (datetime.datetime.now() + datetime.timedelta(minutes=10)).isoformat()
         
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         
+        current_time = datetime.datetime.now().isoformat()
         cursor.execute('DELETE FROM otp_codes WHERE email = ? AND expires_at < ?', 
-                      (email, datetime.datetime.now()))
+                      (email, current_time))
         
         cursor.execute('''
             INSERT INTO otp_codes (email, code, expires_at)
@@ -382,10 +383,11 @@ def verify_otp():
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         
+        current_time = datetime.datetime.now().isoformat()
         cursor.execute('''
             SELECT id FROM otp_codes 
             WHERE email = ? AND code = ? AND expires_at > ? AND used = FALSE
-        ''', (email, hashed_code, datetime.datetime.now()))
+        ''', (email, hashed_code, current_time))
         
         otp_record = cursor.fetchone()
         
@@ -398,15 +400,16 @@ def verify_otp():
         cursor.execute('SELECT id, username FROM users WHERE email = ?', (email,))
         user = cursor.fetchone()
         
+        current_time = datetime.datetime.now().isoformat()
         if user:
             user_id = user[0]
             cursor.execute('UPDATE users SET last_login = ? WHERE id = ?', 
-                          (datetime.datetime.now(), user_id))
+                          (current_time, user_id))
         else:
             cursor.execute('''
                 INSERT INTO users (email, username, last_login, is_verified)
                 VALUES (?, ?, ?, TRUE)
-            ''', (email, username, datetime.datetime.now()))
+            ''', (email, username, current_time))
             user_id = cursor.lastrowid
             
             cursor.execute('''
@@ -491,13 +494,14 @@ def update_stats():
             diff_key = difficulty_map.get(difficulty, 'normal')
             difficulty_stats[diff_key] = difficulty_stats.get(diff_key, 0) + 1
             
+            current_time = datetime.datetime.now().isoformat()
             cursor.execute('''
                 UPDATE game_stats 
                 SET high_score = ?, total_games = ?, total_playtime = ?, 
                     average_score = ?, last_played = ?, difficulty_stats = ?
                 WHERE user_id = ?
             ''', (new_high_score, new_total_games, new_total_playtime, 
-                  new_average_score, datetime.datetime.now(), 
+                  new_average_score, current_time, 
                   json.dumps(difficulty_stats), user_id))
         
         conn.commit()
@@ -622,7 +626,7 @@ def update_user_score():
                     average_score = ?, last_played = ?, difficulty_stats = ?
                 WHERE user_id = ?
             ''', (new_high_score, new_total_games, new_total_playtime, 
-                  new_average_score, datetime.datetime.now(), 
+                  new_average_score, datetime.datetime.now().isoformat(), 
                   json.dumps(difficulty_stats), request.user_id))
             
             conn.commit()
@@ -651,7 +655,7 @@ def update_user_score():
 def get_high_scores():
     try:
         limit = request.args.get('limit', 10, type=int)
-        limit = min(max(limit, 1), 50)  # Limit between 1 and 50
+        limit = min(max(limit, 1), 50)
         
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
