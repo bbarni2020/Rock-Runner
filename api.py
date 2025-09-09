@@ -48,6 +48,20 @@ def init_database():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS game_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            score INTEGER NOT NULL,
+            playtime INTEGER NOT NULL,
+            difficulty INTEGER DEFAULT 2,
+            session_start TIMESTAMP,
+            session_end TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_completed BOOLEAN DEFAULT TRUE,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
     
     conn.commit()
     conn.close()
@@ -384,21 +398,44 @@ def get_user_stats():
     except Exception as e:
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
-@app.route('/api/user/update-score', methods=['POST'])
+@app.route('/api/user/add-score', methods=['POST'])
 @jwt_required
-def update_user_score():
+def add_user_score():
     try:
         data = request.get_json()
         score = data.get('score', 0)
         playtime = data.get('playtime', 0)
         difficulty = data.get('difficulty', 2)
+        session_start = data.get('sessionStart')
         
         if score < 0 or playtime < 0:
             return jsonify({'success': False, 'message': 'Invalid score or playtime'}), 400
-        
+
+        if playtime > 0:
+            max_possible_score = playtime * 10
+            if score > max_possible_score:
+                return jsonify({'success': False, 'message': 'Score too high for playtime'}), 400
+
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
+
+        recent_time = (datetime.datetime.now() - datetime.timedelta(seconds=10)).isoformat()
+        cursor.execute('''
+            SELECT COUNT(*) FROM game_sessions 
+            WHERE user_id = ? AND session_end > ?
+        ''', (request.user_id, recent_time))
         
+        recent_count = cursor.fetchone()[0]
+        if recent_count > 0:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Too many score submissions. Please wait.'}), 429
+
+        session_start_time = session_start if session_start else datetime.datetime.now().isoformat()
+        cursor.execute('''
+            INSERT INTO game_sessions (user_id, score, playtime, difficulty, session_start, session_end)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (request.user_id, score, playtime, difficulty, session_start_time, datetime.datetime.now().isoformat()))
+
         cursor.execute('''
             SELECT high_score, total_games, total_playtime, average_score, difficulty_stats
             FROM game_stats WHERE user_id = ?
@@ -407,7 +444,8 @@ def update_user_score():
         current_stats = cursor.fetchone()
         
         if current_stats:
-            new_high_score = max(current_stats[0] or 0, score)
+            current_high_score = current_stats[0] or 0
+            new_high_score = max(current_high_score, score)
             new_total_games = (current_stats[1] or 0) + 1
             new_total_playtime = (current_stats[2] or 0) + playtime
             new_average_score = ((current_stats[3] or 0) * (new_total_games - 1) + score) / new_total_games
@@ -431,8 +469,8 @@ def update_user_score():
             
             return jsonify({
                 'success': True,
-                'message': 'Score updated successfully',
-                'newHighScore': new_high_score > (current_stats[0] or 0),
+                'message': 'Score added successfully',
+                'newHighScore': new_high_score > current_high_score,
                 'stats': {
                     'highScore': new_high_score,
                     'totalGames': new_total_games,
@@ -443,6 +481,48 @@ def update_user_score():
             })
         else:
             return jsonify({'success': False, 'message': 'User stats not found'}), 404
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@app.route('/api/user/game-sessions', methods=['GET'])
+@jwt_required
+def get_user_game_sessions():
+    try:
+        limit = request.args.get('limit', 10, type=int)
+        limit = min(max(limit, 1), 50)
+        
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT score, playtime, difficulty, session_start, session_end, is_completed
+            FROM game_sessions 
+            WHERE user_id = ?
+            ORDER BY session_end DESC
+            LIMIT ?
+        ''', (request.user_id, limit))
+        
+        sessions = cursor.fetchall()
+        conn.close()
+        
+        session_list = []
+        difficulty_map = {1: 'Easy', 2: 'Normal', 3: 'Hard'}
+        
+        for session in sessions:
+            session_list.append({
+                'score': session[0],
+                'playtime': session[1],
+                'difficulty': difficulty_map.get(session[2], 'Normal'),
+                'sessionStart': session[3],
+                'sessionEnd': session[4],
+                'isCompleted': bool(session[5])
+            })
+        
+        return jsonify({
+            'success': True,
+            'sessions': session_list
+        })
         
     except Exception as e:
         return jsonify({'success': False, 'message': 'Server error'}), 500
