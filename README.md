@@ -94,6 +94,10 @@ Started as a simple lane-switching game, then added user accounts because I want
 
 The particle system probably uses more CPU than it should, but it looks cool so I'm keeping it. You can disable effects in settings if your machine struggles.
 
+## AI Debugging Notes
+
+I used GitHub Copilot to help debug some gnarly issues. If you spot weird console logs or suspiciously clean error handling, that's probably why. Honestly, AI saved me hours on the boring stuff.
+
 ## Contributing
 
 Found a bug? Cool, open an issue. Want to add features? Even cooler, make a PR. The code's reasonably commented, though some parts got messy when I was implementing the smooth lane transitions at 2 AM.
